@@ -5,20 +5,21 @@ namespace App\Service\Section;
 
 
 use App\Dto\Item as ItemDto;
+use App\Dto\User as UserDto;
 use App\Entity\Item;
 use App\Entity\LastBotQuestion;
+use App\Entity\User;
 use Telegram\Bot\Keyboard\Keyboard;
 
 class Settings extends Base implements SettingsInterface
 {
-    function start(bool $is_course_added = false): void
+    function start(?string $additional_text_to_header = null): void
     {
         $this->clearLastBotQuestion();
 
-        if ($is_course_added) {
-            $text = '✅ Курс успешно добавлен!'.PHP_EOL.PHP_EOL.'⚙ Настройки:';
-        } else {
-            $text = '⚙ Настройки:';
+        $text = '⚙ Настройки:';
+        if (!empty($additional_text_to_header)) {
+            $text = $additional_text_to_header.PHP_EOL.PHP_EOL.$text;
         }
         $keyboard = (new Keyboard())
             ->inline()
@@ -44,7 +45,7 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard);
     }
 
-    public function addCourse(): void
+    function addCourse(): void
     {
         $this->getLastBotQuestion()->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_NAME);
         $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
@@ -62,7 +63,7 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard);
     }
 
-    public function handleUserAnswerOnAddCourseName(): void
+    function handleUserAnswerOnAddCourseName(): void
     {
         $delete_user_answer = true;
         if ($this->isBackToPreviousQuestionCmd()) {
@@ -97,7 +98,7 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard, $delete_user_answer);
     }
 
-    public function addCourseSkipCategory(): void
+    function addCourseSkipCategory(): void
     {
         $this->getLastBotQuestion()
             ->addAnswer('category', null)
@@ -119,7 +120,7 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard);
     }
 
-    public function handleUserAnswerOnAddCourseText(): void
+    function handleUserAnswerOnAddCourseText(): void
     {
         $delete_user_answer = true;
         if ($this->isBackToPreviousQuestionCmd()) {
@@ -148,7 +149,7 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard, $delete_user_answer);
     }
 
-    public function handleUserAnswerOnAddCourseFile(): void
+    function handleUserAnswerOnAddCourseFile(): void
     {
         $delete_user_answer = true;
         if ($this->isBackToPreviousQuestionCmd()) {
@@ -212,7 +213,7 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard, $delete_user_answer);
     }
 
-    public function handleUserAnswerOnAddCourseAboutUrl(): void
+    function handleUserAnswerOnAddCourseAboutUrl(): void
     {
         $this->getLastBotQuestion()->addAnswer('about_url', $this->getText());
         $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
@@ -244,7 +245,7 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard, true);
     }
 
-    public function addCourseSetVisibility(): void
+    function addCourseSetVisibility(): void
     {
         $name = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['name'];
         $category = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['category'];
@@ -258,6 +259,80 @@ class Settings extends Base implements SettingsInterface
         $item = Item::create($dto);
         $this->itemRepository->save($item);
 
-        $this->start(true);
+        $this->start('✅ Курс успешно добавлен!');
     }
+
+    function adminsList(): void
+    {
+        $text = '👥 Администраторы:';
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => '➕ Добавить администратора ➕',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SETTINGS_ADD_ADMIN
+                ])
+            ])
+            ->row([
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SETTINGS
+                ])
+            ]);
+
+        $this->sendMessage($text, $keyboard);
+    }
+
+    function addAdmin(): void
+    {
+        $this->getLastBotQuestion()->setType(LastBotQuestion::TYPE_SETTINGS_ADD_ADMIN_NAME);
+        $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+
+        $text = '💬 Введите имя администратора:';
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SETTINGS_ADMINS_LIST
+                ])
+            ]);
+
+        $this->sendMessage($text, $keyboard);
+    }
+
+    function handleUserAnswerOnAddAdminName(): void
+    {
+        $this->getLastBotQuestion()
+            ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_ADMIN_CHAT_ID)
+            ->addAnswer('name', $this->getText())
+        ;
+        $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+
+        $text = '💬 Введите ChatID:';
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SETTINGS_ADD_ADMIN
+                ])
+            ]);
+
+        $this->sendMessage($text, $keyboard, true);
+    }
+
+    function handleUserAnswerOnAddAdminChatId(): void
+    {
+        $name = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['name'];
+        $chat_id = (int) $this->getText();
+
+        $dto = new UserDto($name, $chat_id, true);
+        $user = User::create($dto);
+        $this->userRepository->save($user);
+
+        $this->start('✅ Администратор '.$name.' успешно добавлен!');
+    }
+
+
 }

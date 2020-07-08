@@ -18,6 +18,8 @@ class LastBotQuestion
     const TYPE_SETTINGS_ADD_COURSE_FILE = 4;
     const TYPE_SETTINGS_ADD_COURSE_ABOUT_URL = 5;
     const TYPE_SETTINGS_ADD_COURSE_VISIBLE = 6;
+    const TYPE_SETTINGS_ADD_ADMIN_NAME = 7;
+    const TYPE_SETTINGS_ADD_ADMIN_CHAT_ID = 8;
 
     /**
      * @ORM\Id()

@@ -4,6 +4,7 @@
 namespace App\Service;
 
 
+use App\Service\Section\Base;
 use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
 use App\Service\Section\BaseAbstract;
@@ -57,6 +58,12 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE_SET_VISIBILITY:
                     $this->settingsSection->addCourseSetVisibility();
                     break;
+                case BaseAbstract::COMMAND_SETTINGS_ADMINS_LIST:
+                    $this->settingsSection->adminsList();
+                    break;
+                case BaseAbstract::COMMAND_SETTINGS_ADD_ADMIN:
+                    $this->settingsSection->addAdmin();
+                    break;
             }
         } elseif ($this->baseSection->isQuestionDefined()) {
             switch ($this->baseSection->getLastBotQuestion()->getType()) {
@@ -71,6 +78,12 @@ class Bot implements BotInterface
                     break;
                 case LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_ABOUT_URL:
                     $this->settingsSection->handleUserAnswerOnAddCourseAboutUrl();
+                    break;
+                case LastBotQuestion::TYPE_SETTINGS_ADD_ADMIN_NAME:
+                    $this->settingsSection->handleUserAnswerOnAddAdminName();
+                    break;
+                case LastBotQuestion::TYPE_SETTINGS_ADD_ADMIN_CHAT_ID:
+                    $this->settingsSection->handleUserAnswerOnAddAdminChatId();
                     break;
             }
         }
