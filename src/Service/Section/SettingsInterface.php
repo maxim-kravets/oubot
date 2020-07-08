@@ -10,6 +10,7 @@ interface SettingsInterface
     function addCourse(): void;
     function addCourseSkipCategory(): void;
     function handleUserAnswerOnAddCourseName(): void;
+    function handleUserAnswerOnAddCourseCategory(): void;
     function handleUserAnswerOnAddCourseText(): void;
     function handleUserAnswerOnAddCourseFile(): void;
     function handleUserAnswerOnAddCourseAboutUrl(): void;
@@ -18,4 +19,6 @@ interface SettingsInterface
     function addAdmin(): void;
     function handleUserAnswerOnAddAdminName(): void;
     function handleUserAnswerOnAddAdminChatId(): void;
+    function removeAdmin(): void;
+    function removeAdminConfirm(): void;
 }

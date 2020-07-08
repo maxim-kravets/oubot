@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Dto\Category as CategoryDto;
 use App\Repository\CategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -17,17 +18,17 @@ class Category
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private int $name;
 
     /**
      * @ORM\OneToMany(targetEntity=Item::class, mappedBy="category")
      */
-    private $items;
+    private Collection $items;
 
     public function __construct()
     {
@@ -80,5 +81,12 @@ class Category
         }
 
         return $this;
+    }
+
+    static function create(CategoryDto $dto): self
+    {
+        return (new Category())
+            ->setName($dto->getName())
+        ;
     }
 }

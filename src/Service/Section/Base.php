@@ -10,6 +10,7 @@ use App\Dto\User as UserDto;
 use App\Entity\LastBotAction;
 use App\Entity\LastBotQuestion;
 use App\Entity\User;
+use App\Repository\CategoryRepositoryInterface;
 use App\Repository\ItemRepositoryInterface;
 use App\Repository\LastBotActionRepositoryInterface;
 use App\Repository\LastBotQuestionRepositoryInterface;
@@ -32,6 +33,7 @@ class Base extends BaseAbstract implements BaseInterface
     protected Update $webhookUpdate;
     protected UserRepositoryInterface $userRepository;
     protected ItemRepositoryInterface $itemRepository;
+    protected CategoryRepositoryInterface $categoryRepository;
     protected LastBotActionRepositoryInterface $lastBotActionRepository;
     protected LastBotQuestionRepositoryInterface $lastBotQuestionRepository;
     private ?LastBotAction $lastBotAction;
@@ -43,12 +45,14 @@ class Base extends BaseAbstract implements BaseInterface
         UserRepositoryInterface $userRepository,
         ItemRepositoryInterface $itemRepository,
         BotConfigurationInterface $botConfiguration,
+        CategoryRepositoryInterface $categoryRepository,
         LastBotActionRepositoryInterface $lastBotActionRepository,
         LastBotQuestionRepositoryInterface $lastBotQuestionRepository
     ) {
         $this->logger = $logger;
         $this->userRepository = $userRepository;
         $this->itemRepository = $itemRepository;
+        $this->categoryRepository = $categoryRepository;
         $this->lastBotActionRepository = $lastBotActionRepository;
         $this->lastBotQuestionRepository = $lastBotQuestionRepository;
 

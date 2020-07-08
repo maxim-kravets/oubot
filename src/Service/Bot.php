@@ -64,6 +64,12 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_SETTINGS_ADD_ADMIN:
                     $this->settingsSection->addAdmin();
                     break;
+                case BaseAbstract::COMMAND_SETTINGS_REMOVE_ADMIN:
+                    $this->settingsSection->removeAdmin();
+                    break;
+                case BaseAbstract::COMMAND_SETTINGS_REMOVE_ADMIN_CONFIRM:
+                    $this->settingsSection->removeAdminConfirm();
+                    break;
             }
         } elseif ($this->baseSection->isQuestionDefined()) {
             switch ($this->baseSection->getLastBotQuestion()->getType()) {

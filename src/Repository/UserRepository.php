@@ -6,6 +6,7 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 
@@ -27,9 +28,36 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
         $this->logger = $logger;
     }
 
+    public function findById(int $id): ?User
+    {
+        return $this->findOneBy(['id' => $id]);
+    }
+
     public function findByChatId(int $id): ?User
     {
         return $this->findOneBy(['chatId' => $id]);
+    }
+
+    public function findAdminByName(string $name): ?User
+    {
+        return $this->findOneBy([
+            'administrator' => true,
+            'name' => $name
+        ]);
+    }
+
+    public function getAdminsList(): Paginator
+    {
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('u')
+            ->from('App\Entity\User', 'u')
+            ->where('u.administrator=1')
+            ->orderBy('u.id', 'DESC')
+            ->getQuery()
+        ;
+
+        return new Paginator($query, false);
     }
 
     public function save(User $entity): void

@@ -101,7 +101,9 @@ class LastBotQuestion
 
     public function unsetAnswer(string $key): self
     {
-        unset($this->answersFromPreviousQuestions[$key]);
+        if (isset($this->answersFromPreviousQuestions[$key])) {
+            unset($this->answersFromPreviousQuestions[$key]);
+        }
 
         return $this;
     }
