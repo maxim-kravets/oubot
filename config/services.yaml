@@ -25,3 +25,16 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Service\BotConfiguration:
+        arguments:
+            $token: '%env(TELEGRAM_BOT_TOKEN)%'
+
+    App\Service\Section\BaseInterface: '@App\Service\Section\Base'
+    App\Service\Section\MainMenuInterface: '@App\Service\Section\MainMenu'
+    App\Service\Section\CabinetInterface: '@App\Service\Section\Cabinet'
+    App\Service\Section\CoursesInterface: '@App\Service\Section\Courses'
+    App\Service\Section\MailingInterface: '@App\Service\Section\Mailing'
+    App\Service\Section\PromocodesInterface: '@App\Service\Section\Promocodes'
+    App\Service\Section\SettingsInterface: '@App\Service\Section\Settings'
+
