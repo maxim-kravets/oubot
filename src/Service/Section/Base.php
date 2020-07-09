@@ -120,6 +120,17 @@ class Base extends BaseAbstract implements BaseInterface
         }
     }
 
+    function getCallbackData()
+    {
+        $callbackQuery = $this->getWebhookUpdate()->get('callback_query');
+
+        if (!empty($callbackQuery)) {
+            return json_decode($callbackQuery->get('data'));
+        }
+
+        return null;
+    }
+
     function isBackToPreviousQuestionCmd(): bool
     {
         if ($this->getWebhookUpdate()->detectType() !== 'callback_query') {

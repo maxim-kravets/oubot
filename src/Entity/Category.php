@@ -23,7 +23,7 @@ class Category
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private int $name;
+    private string $name;
 
     /**
      * @ORM\OneToMany(targetEntity=Item::class, mappedBy="category")

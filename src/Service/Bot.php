@@ -52,6 +52,12 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE:
                     $this->settingsSection->addCourse();
                     break;
+                case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE_CATEGORIES:
+                    $this->settingsSection->addCourseCategories();
+                    break;
+                case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY:
+                    $this->settingsSection->addCourseSelectCategory();
+                    break;
                 case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE_SKIP_CATEGORY:
                     $this->settingsSection->addCourseSkipCategory();
                     break;
@@ -75,6 +81,9 @@ class Bot implements BotInterface
             switch ($this->baseSection->getLastBotQuestion()->getType()) {
                 case LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_NAME:
                     $this->settingsSection->handleUserAnswerOnAddCourseName();
+                    break;
+                case LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_CATEGORY:
+                    $this->settingsSection->handleUserAnswerOnAddCourseCategory();
                     break;
                 case LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT:
                     $this->settingsSection->handleUserAnswerOnAddCourseText();

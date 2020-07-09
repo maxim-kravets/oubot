@@ -46,6 +46,14 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
         ]);
     }
 
+    public function findAdminByChatId(int $id): ?User
+    {
+        return $this->findOneBy([
+            'administrator' => true,
+            'chatId' => $id
+        ]);
+    }
+
     public function getAdminsList(): Paginator
     {
         $query = $this->getEntityManager()

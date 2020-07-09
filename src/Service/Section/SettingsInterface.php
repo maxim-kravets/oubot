@@ -8,6 +8,8 @@ interface SettingsInterface
 {
     function start(?string $additional_text_to_header = null): void;
     function addCourse(): void;
+    function addCourseCategories(bool $delete_user_answer = false): void;
+    function addCourseSelectCategory();
     function addCourseSkipCategory(): void;
     function handleUserAnswerOnAddCourseName(): void;
     function handleUserAnswerOnAddCourseCategory(): void;

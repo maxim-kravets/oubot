@@ -11,6 +11,7 @@ use App\Dto\User as UserDto;
 use App\Entity\Item;
 use App\Entity\LastBotQuestion;
 use App\Entity\User;
+use Exception;
 use Telegram\Bot\Keyboard\Keyboard;
 
 class Settings extends Base implements SettingsInterface
@@ -65,6 +66,216 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard);
     }
 
+    function addCourseCategories(bool $delete_user_answer = false): void
+    {
+        $page = $this->getCallbackData()->p ?? 1;
+        $limit = 5;
+        $categories = $this->categoryRepository->getList($page, $limit);
+        $total_count = $categories->count();
+
+        try {
+            $count_per_page = $categories->getIterator()->count();
+        } catch (Exception $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+
+        if ($total_count === 0) {
+            $text = '💬 Создайте категорию:';
+        } else {
+            $text = '💬 Выберите или создайте категорию:';
+        }
+
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => 'Пропустить',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SETTINGS_ADD_COURSE_SKIP_CATEGORY
+                ])
+            ]);
+
+        $pages = ceil($total_count / $limit);
+
+        switch ($count_per_page) {
+            case 1:
+                $keyboard
+                    ->row([
+                        'text' => $categories->getIterator()[0]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[0]->getId()
+                        ])
+                    ]);
+                break;
+            case 2:
+                $keyboard
+                    ->row([
+                        'text' => $categories->getIterator()[0]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[0]->getId()
+                        ])
+                    ], [
+                        'text' => $categories->getIterator()[1]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[1]->getId()
+                        ])
+                    ]);
+                break;
+            case 3:
+                $keyboard
+                    ->row([
+                        'text' => $categories->getIterator()[0]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[0]->getId()
+                        ])
+                    ], [
+                        'text' => $categories->getIterator()[1]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[1]->getId()
+                        ])
+                    ])
+                    ->row([
+                        'text' => $categories->getIterator()[2]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[2]->getId()
+                        ])
+                    ]);
+                break;
+            case 4:
+                $keyboard
+                    ->row([
+                        'text' => $categories->getIterator()[0]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[0]->getId()
+                        ])
+                    ], [
+                        'text' => $categories->getIterator()[1]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[1]->getId()
+                        ])
+                    ])
+                    ->row([
+                        'text' => $categories->getIterator()[2]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[2]->getId()
+                        ])
+                    ], [
+                        'text' => $categories->getIterator()[3]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[3]->getId()
+                        ])
+                    ]);
+                break;
+            case 5:
+                $keyboard
+                    ->row([
+                        'text' => $categories->getIterator()[0]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[0]->getId()
+                        ])
+                    ], [
+                        'text' => $categories->getIterator()[1]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[1]->getId()
+                        ])
+                    ])
+                    ->row([
+                        'text' => $categories->getIterator()[2]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[2]->getId()
+                        ])
+                    ])
+                    ->row([
+                        'text' => $categories->getIterator()[3]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[3]->getId()
+                        ])
+                    ], [
+                        'text' => $categories->getIterator()[4]->getName(),
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SELECT_CATEGORY,
+                            'id' => $categories->getIterator()[4]->getId()
+                        ])
+                    ]);
+        }
+
+
+        if ($pages > 1) {
+
+            $previous_page = $page - 1;
+            if ($previous_page < 1) {
+                $previous_page = $pages;
+            }
+
+            $next_page = $page + 1;
+            if ($next_page > $pages) {
+                $next_page = 1;
+            }
+
+            $keyboard
+                ->row([
+                    'text' => '◀️',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_SETTINGS_ADD_COURSE_CATEGORIES,
+                        'p' => $previous_page
+                    ])
+                ], [
+                    'text' => '▶️️',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_SETTINGS_ADD_COURSE_CATEGORIES,
+                        'p' => $next_page
+                    ])
+                ]);
+        }
+
+        $keyboard
+            ->row([
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SETTINGS_ADD_COURSE
+                ])
+            ]);
+
+        $this->sendMessage($text, $keyboard, $delete_user_answer);
+    }
+
+    function addCourseSelectCategory(): void
+    {
+        $id = $this->getCallbackData()->id;
+        $this->getLastBotQuestion()
+            ->addAnswer('category_id', $id)
+            ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT)
+        ;
+        $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+
+        $text = '💬 Введите текст:';
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
+                    'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_NAME
+                ])
+            ]);
+
+        $this->sendMessage($text, $keyboard);
+    }
+
     function handleUserAnswerOnAddCourseName(): void
     {
         $delete_user_answer = true;
@@ -87,6 +298,7 @@ class Settings extends Base implements SettingsInterface
                         'c' => self::COMMAND_SETTINGS
                     ])
                 ]);
+            $this->sendMessage($text, $keyboard, $delete_user_answer);
         } else {
             $this->getLastBotQuestion()
                 ->addAnswer('name', $name)
@@ -94,25 +306,8 @@ class Settings extends Base implements SettingsInterface
                 ->unsetAnswer('category_name')
                 ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_CATEGORY);
             $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
-
-            $text = '💬 Выберите или создайте категорию:';
-            $keyboard = (new Keyboard())
-                ->inline()
-                ->row([
-                    'text' => 'Пропустить',
-                    'callback_data' => json_encode([
-                        'c' => self::COMMAND_SETTINGS_ADD_COURSE_SKIP_CATEGORY
-                    ])
-                ])
-                ->row([
-                    'text' => 'Назад',
-                    'callback_data' => json_encode([
-                        'c' => self::COMMAND_SETTINGS_ADD_COURSE
-                    ])
-                ]);
+            $this->addCourseCategories($delete_user_answer);
         }
-
-        $this->sendMessage($text, $keyboard, $delete_user_answer);
     }
 
     function addCourseSkipCategory(): void
@@ -139,8 +334,10 @@ class Settings extends Base implements SettingsInterface
 
     function handleUserAnswerOnAddCourseCategory(): void
     {
+        $delete_user_answer = true;
         if ($this->isBackToPreviousQuestionCmd()) {
             $name = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['category_name'];
+            $delete_user_answer = false;
         } else {
             $name = $this->getText();
         }
@@ -159,7 +356,7 @@ class Settings extends Base implements SettingsInterface
                 ]);
         } else {
             $this->getLastBotQuestion()
-                ->addAnswer('category_name', $category)
+                ->addAnswer('category_name', $name)
                 ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT)
             ;
             $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
@@ -176,7 +373,7 @@ class Settings extends Base implements SettingsInterface
                 ]);
         }
 
-        $this->sendMessage($text, $keyboard, true);
+        $this->sendMessage($text, $keyboard, $delete_user_answer);
     }
 
     function handleUserAnswerOnAddCourseText(): void
@@ -343,7 +540,7 @@ class Settings extends Base implements SettingsInterface
         }
 
         if (!empty($category_name)) {
-            $dto = new CategoryDto($name);
+            $dto = new CategoryDto($category_name);
             $category = Category::create($dto);
             $this->categoryRepository->save($category);
         }
@@ -458,18 +655,33 @@ class Settings extends Base implements SettingsInterface
         $name = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['name'];
         $chat_id = (int) $this->getText();
 
-        $dto = new UserDto($name, $chat_id, true);
-        $user = User::create($dto);
-        $this->userRepository->save($user);
+        $admin = $this->userRepository->findAdminByChatId($chat_id);
 
-        $this->deleteMessage($this->getMessageId());
-        $this->start('✅ Администратор '.$name.' успешно добавлен!');
+        if (!empty($admin)) {
+            $text = '⚠️ Админ с таким ChatID уже существует, введите другой:';
+            $keyboard = (new Keyboard())
+                ->inline()
+                ->row([
+                    'text' => 'Назад',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_SETTINGS_ADD_ADMIN
+                    ])
+                ]);
+
+            $this->sendMessage($text, $keyboard, true);
+        } else {
+            $dto = new UserDto($name, $chat_id, true);
+            $user = User::create($dto);
+            $this->userRepository->save($user);
+
+            $this->deleteMessage($this->getMessageId());
+            $this->start('✅ Администратор ' . $name . ' успешно добавлен!');
+        }
     }
 
     function removeAdmin(): void
     {
-        $id = json_decode($this->getWebhookUpdate()->callbackQuery->get('data'))->id;
-
+        $id = $this->getCallbackData()->id;
         $admin = $this->userRepository->findById($id);
 
         $text = 'Вы действительно хотите удалить администратора с именем "'.$admin->getName().'"?';

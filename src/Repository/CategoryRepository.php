@@ -6,6 +6,7 @@ use App\Entity\Category;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 
@@ -35,6 +36,21 @@ class CategoryRepository extends ServiceEntityRepository implements CategoryRepo
     function findByName(string $name): ?Category
     {
         return $this->findOneBy(['name' => $name]);
+    }
+
+    function getList(int $page, int $limit = 5): Paginator
+    {
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('c')
+            ->from('App\Entity\Category', 'c')
+            ->orderBy('c.id', 'DESC')
+            ->getQuery()
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+        ;
+
+        return new Paginator($query, false);
     }
 
     function save(Category $entity): void
