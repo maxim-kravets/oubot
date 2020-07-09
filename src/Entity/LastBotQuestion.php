@@ -20,6 +20,8 @@ class LastBotQuestion
     const TYPE_SETTINGS_ADD_COURSE_VISIBLE = 6;
     const TYPE_SETTINGS_ADD_ADMIN_NAME = 7;
     const TYPE_SETTINGS_ADD_ADMIN_CHAT_ID = 8;
+    const TYPE_SUPPORT_USER_QUESTION = 9;
+    const TYPE_SUPPORT_ADMIN_ANSWER = 10;
 
     /**
      * @ORM\Id()

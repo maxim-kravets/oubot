@@ -81,7 +81,7 @@ class User
         return $this;
     }
 
-    public function getAdministrator(): ?bool
+    public function isAdministrator(): bool
     {
         return $this->administrator;
     }

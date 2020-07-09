@@ -492,7 +492,10 @@ class Settings extends Base implements SettingsInterface
 
     function handleUserAnswerOnAddCourseAboutUrl(): void
     {
-        $this->getLastBotQuestion()->addAnswer('about_url', $this->getText());
+        $this->getLastBotQuestion()
+            ->addAnswer('about_url', $this->getText())
+            ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_VISIBLE)
+        ;
         $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
 
         $text = '💬 Выберите видимость курса:';

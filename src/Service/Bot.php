@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
 use App\Service\Section\BaseAbstract;
 use App\Service\Section\BaseInterface;
+use App\Service\Section\SupportInterface;
 use App\Service\Section\CabinetInterface;
 use App\Service\Section\MainMenuInterface;
 use App\Service\Section\SettingsInterface;
@@ -19,6 +20,7 @@ class Bot implements BotInterface
     private LoggerInterface $logger;
     private BaseInterface $baseSection;
     private MainMenuInterface $mainMenuSection;
+    private SupportInterface $supportSection;
     private CabinetInterface $cabinetSection;
     private SettingsInterface $settingsSection;
 
@@ -26,12 +28,14 @@ class Bot implements BotInterface
         LoggerInterface $logger,
         BaseInterface $baseSection,
         MainMenuInterface $mainMenuSection,
+        SupportInterface $supportSection,
         CabinetInterface $cabinetSection,
         SettingsInterface $settingsSection
     ) {
         $this->logger = $logger;
         $this->baseSection = $baseSection;
         $this->mainMenuSection = $mainMenuSection;
+        $this->supportSection = $supportSection;
         $this->cabinetSection = $cabinetSection;
         $this->settingsSection = $settingsSection;
     }
@@ -40,11 +44,17 @@ class Bot implements BotInterface
     {
         if ($this->baseSection->isCommandDefined()) {
             switch ($this->baseSection->getCommand()) {
+                case BaseAbstract::COMMAND_DELETE_MESSAGE:
+                    $this->baseSection->deleteMessage();
+                    break;
                 case BaseAbstract::COMMAND_MAIN_MENU:
                     $this->mainMenuSection->start();
                     break;
                 case BaseAbstract::COMMAND_CABINET:
                     $this->cabinetSection->start();
+                    break;
+                case BaseAbstract::COMMAND_SUPPORT:
+                    $this->supportSection->start();
                     break;
                 case BaseAbstract::COMMAND_SETTINGS:
                     $this->settingsSection->start();
@@ -76,6 +86,9 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_SETTINGS_REMOVE_ADMIN_CONFIRM:
                     $this->settingsSection->removeAdminConfirm();
                     break;
+                case BaseAbstract::COMMAND_SUPPORT_ADMIN_QUESTION:
+                    $this->supportSection->question();
+                    break;
             }
         } elseif ($this->baseSection->isQuestionDefined()) {
             switch ($this->baseSection->getLastBotQuestion()->getType()) {
@@ -99,6 +112,12 @@ class Bot implements BotInterface
                     break;
                 case LastBotQuestion::TYPE_SETTINGS_ADD_ADMIN_CHAT_ID:
                     $this->settingsSection->handleUserAnswerOnAddAdminChatId();
+                    break;
+                case LastBotQuestion::TYPE_SUPPORT_USER_QUESTION:
+                    $this->supportSection->handleUserAnswerOnAskQuestion();
+                    break;
+                case LastBotQuestion::TYPE_SUPPORT_ADMIN_ANSWER:
+                    $this->supportSection->handleAdminAnswerOnAnswerQuestion();
                     break;
             }
         }

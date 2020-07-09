@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+
+use App\Dto\Support as SupportDto;
 use App\Repository\SupportRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -15,45 +17,45 @@ class Support
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="supports")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $user;
+    private User $user;
 
     /**
      * @ORM\Column(type="array")
      */
-    private $questions = [];
+    private array $questions = [];
 
     /**
      * @ORM\Column(type="text", nullable=true)
      */
-    private $answer;
+    private ?string $answer = null;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="supports")
      */
-    private $administrator;
+    private ?User $administrator = null;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $answered;
+    private bool $answered = false;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getUser(): ?User
+    public function getUser(): User
     {
         return $this->user;
     }
 
-    public function setUser(?User $user): self
+    public function setUser(User $user): self
     {
         $this->user = $user;
 
@@ -68,6 +70,13 @@ class Support
     public function setQuestions(array $questions): self
     {
         $this->questions = $questions;
+
+        return $this;
+    }
+
+    public function addQuestion(string $question): self
+    {
+        $this->questions[] = $question;
 
         return $this;
     }
@@ -106,5 +115,13 @@ class Support
         $this->answered = $answered;
 
         return $this;
+    }
+
+    static function create(SupportDto $dto): Support
+    {
+        return (new Support())
+            ->setUser($dto->getUser())
+            ->addQuestion($dto->getQuestion())
+        ;
     }
 }

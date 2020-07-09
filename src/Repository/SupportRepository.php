@@ -4,7 +4,11 @@ namespace App\Repository;
 
 use App\Entity\Support;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
 
 /**
  * @method Support|null find($id, $lockMode = null, $lockVersion = null)
@@ -12,39 +16,53 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Support[]    findAll()
  * @method Support[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class SupportRepository extends ServiceEntityRepository
+class SupportRepository extends ServiceEntityRepository implements SupportRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $em;
+    private LoggerInterface $logger;
+
+    public function __construct(ManagerRegistry $registry, LoggerInterface $logger)
     {
         parent::__construct($registry, Support::class);
+        $this->em = $this->getEntityManager();
+        $this->logger = $logger;
     }
 
-    // /**
-    //  * @return Support[] Returns an array of Support objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function findById(int $id): ?Support
     {
-        return $this->createQueryBuilder('s')
-            ->andWhere('s.exampleField = :val')
-            ->setParameter('val', $value)
+        return $this->findOneBy(['id' => $id]);
+    }
+
+    public function findUnansweredByUserId(int $id): ?Support
+    {
+        return $this->findOneBy([
+            'user' => $id,
+            'answered' => 0
+        ]);
+    }
+
+    public function getListUnanswered(): Paginator
+    {
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('s')
+            ->from('App\Entity\Support', 's')
+            ->where('s.answered=0')
             ->orderBy('s.id', 'ASC')
-            ->setMaxResults(10)
             ->getQuery()
-            ->getResult()
         ;
-    }
-    */
 
-    /*
-    public function findOneBySomeField($value): ?Support
-    {
-        return $this->createQueryBuilder('s')
-            ->andWhere('s.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        return new Paginator($query, false);
     }
-    */
+
+    public function save(Support $entity): void
+    {
+        try {
+            $this->em->persist($entity);
+            $this->em->flush();
+        } catch (ORMException $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+    }
 }

@@ -12,7 +12,7 @@ use Telegram\Bot\Objects\Update;
 
 interface BaseInterface
 {
-    function deleteMessage(int $id): void;
+    function deleteMessage(?int $id = null): void;
     function sendMessage(string $text, Keyboard $keyboard): void;
     function getLogger(): LoggerInterface;
     function getChatId();

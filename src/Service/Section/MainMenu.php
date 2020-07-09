@@ -29,7 +29,7 @@ class MainMenu extends Base implements MainMenuInterface
             ->row([
                 'text' => '📲 Служба поддержки',
                 'callback_data' => json_encode([
-                    'c' => self::COMMAND_SUPPORT_USER
+                    'c' => self::COMMAND_SUPPORT
                 ])
             ])
             ->row([

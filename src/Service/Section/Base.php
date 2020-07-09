@@ -14,6 +14,7 @@ use App\Repository\CategoryRepositoryInterface;
 use App\Repository\ItemRepositoryInterface;
 use App\Repository\LastBotActionRepositoryInterface;
 use App\Repository\LastBotQuestionRepositoryInterface;
+use App\Repository\SupportRepositoryInterface;
 use App\Repository\UserRepositoryInterface;
 use App\Service\BotConfigurationInterface;
 use Psr\Log\LoggerInterface;
@@ -34,6 +35,7 @@ class Base extends BaseAbstract implements BaseInterface
     protected UserRepositoryInterface $userRepository;
     protected ItemRepositoryInterface $itemRepository;
     protected CategoryRepositoryInterface $categoryRepository;
+    protected SupportRepositoryInterface $supportRepository;
     protected LastBotActionRepositoryInterface $lastBotActionRepository;
     protected LastBotQuestionRepositoryInterface $lastBotQuestionRepository;
     private ?LastBotAction $lastBotAction;
@@ -46,6 +48,7 @@ class Base extends BaseAbstract implements BaseInterface
         ItemRepositoryInterface $itemRepository,
         BotConfigurationInterface $botConfiguration,
         CategoryRepositoryInterface $categoryRepository,
+        SupportRepositoryInterface $supportRepository,
         LastBotActionRepositoryInterface $lastBotActionRepository,
         LastBotQuestionRepositoryInterface $lastBotQuestionRepository
     ) {
@@ -53,6 +56,7 @@ class Base extends BaseAbstract implements BaseInterface
         $this->userRepository = $userRepository;
         $this->itemRepository = $itemRepository;
         $this->categoryRepository = $categoryRepository;
+        $this->supportRepository = $supportRepository;
         $this->lastBotActionRepository = $lastBotActionRepository;
         $this->lastBotQuestionRepository = $lastBotQuestionRepository;
 
@@ -152,8 +156,12 @@ class Base extends BaseAbstract implements BaseInterface
         return $cmd === self::COMMAND_BACK_TO_PREVIOUS_QUESTION;
     }
 
-    function deleteMessage(int $id): void
+    function deleteMessage(?int $id = null): void
     {
+        if (empty($id)) {
+            $id = $this->getMessageId();
+        }
+
         try {
             $this->api->deleteMessage([
                 'chat_id' => $this->getChatId(),
