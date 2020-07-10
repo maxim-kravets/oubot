@@ -35,13 +35,18 @@ class Cabinet extends Base implements CabinetInterface
              * @var UserItem $userItem
              */
             foreach ($usersItems as $userItem) {
+                $back_cmd = [
+                    'c' => self::COMMAND_CABINET,
+                    'p' => $page
+                ];
+
                 $keyboard
                     ->row([
                         'text' => '✅ '.$userItem->getItem()->getName(),
                         'callback_data' => json_encode([
                             'c' => self::COMMAND_COURSES_DOWNLOAD,
                             'id' => $userItem->getItem()->getId(),
-                            'bcid' => self::COMMAND_CABINET
+                            'bc' => $back_cmd
                         ])
                     ]);
             }
@@ -74,7 +79,6 @@ class Cabinet extends Base implements CabinetInterface
                     ]);
             }
         }
-
 
         $keyboard
             ->row([

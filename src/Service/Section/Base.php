@@ -76,8 +76,6 @@ class Base extends BaseAbstract implements BaseInterface
         switch ($this->getWebhookUpdate()->detectType()) {
             case 'callback_query':
                 $this->setChatId($this->getWebhookUpdate()->get('callback_query')->getMessage()->get('chat')->get('id'));
-
-                $this->logger->critical($this->getWebhookUpdate()->get('callback_query')->get('data'));
                 $this->setCommand(json_decode($this->getWebhookUpdate()->get('callback_query')->get('data'))->c);
                 $this->setMessageId($this->getWebhookUpdate()->get('callback_query')->getMessage()->get('message_id'));
                 break;

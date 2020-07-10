@@ -213,12 +213,35 @@ class Courses extends Base implements CoursesInterface
             $item = $items->getIterator()[$page - 1];
 
             $text = '['.$item->getName().']('.$item->getAboutUrl().')';
-            $keyboard = (new Keyboard())
-                ->inline()
-                ->row([
+
+            if ($this->userItemRepository->isUserHasItem($this->getUser(), $item)) {
+                $back_cmd = [
+                    'c' => self::COMMAND_COURSES,
+                    'p' => $page
+                ];
+
+                if (!empty($category_id)) {
+                    $back_cmd['cid'] = $category_id;
+                }
+
+                $first_cell = [
+                    'text' => 'Скачать',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_COURSES_DOWNLOAD,
+                        'id' => $item->getId(),
+                        'bc' => $back_cmd
+                    ])
+                ];
+            } else {
+                $first_cell = [
                     'text' => '💸 Приобрести',
                     'url' => 'http://google.com'
-                ], [
+                ];
+            }
+
+            $keyboard = (new Keyboard())
+                ->inline()
+                ->row($first_cell, [
                     'text' => '📖 Подробнее',
                     'url' => $item->getAboutUrl()
                 ]);
@@ -284,7 +307,7 @@ class Courses extends Base implements CoursesInterface
     function download(): void
     {
         $id = $this->getCallbackData()->id;
-        $back_cmd_id = $this->getCallbackData()->bcid;
+        $back_cmd = $this->getCallbackData()->bc;
 
         $item = $this->itemRepository->findById($id);
 
@@ -293,9 +316,7 @@ class Courses extends Base implements CoursesInterface
             ->inline()
             ->row([
                 'text' => 'Назад',
-                'callback_data' => json_encode([
-                    'c' => $back_cmd_id
-                ])
+                'callback_data' => json_encode($back_cmd)
             ]);
 
         try {

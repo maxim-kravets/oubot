@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 
+use App\Entity\Item;
+use App\Entity\User;
 use App\Entity\UserItem;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,6 +28,14 @@ class UserItemRepository extends ServiceEntityRepository implements UserItemRepo
         parent::__construct($registry, UserItem::class);
         $this->em = $this->getEntityManager();
         $this->logger = $logger;
+    }
+
+    function isUserHasItem(User $user, Item $item): bool
+    {
+        return !empty($this->findOneBy([
+            'user' => $user->getId(),
+            'item' => $item->getId()
+        ]));
     }
 
     function getListByUserId(int $user_id, int $page = 1, int $limit = 5): Paginator
