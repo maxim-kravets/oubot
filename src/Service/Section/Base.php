@@ -15,6 +15,7 @@ use App\Repository\ItemRepositoryInterface;
 use App\Repository\LastBotActionRepositoryInterface;
 use App\Repository\LastBotQuestionRepositoryInterface;
 use App\Repository\SupportRepositoryInterface;
+use App\Repository\UserItemRepositoryInterface;
 use App\Repository\UserRepositoryInterface;
 use App\Service\BotConfigurationInterface;
 use Psr\Log\LoggerInterface;
@@ -34,8 +35,9 @@ class Base extends BaseAbstract implements BaseInterface
     protected Update $webhookUpdate;
     protected UserRepositoryInterface $userRepository;
     protected ItemRepositoryInterface $itemRepository;
-    protected CategoryRepositoryInterface $categoryRepository;
     protected SupportRepositoryInterface $supportRepository;
+    protected CategoryRepositoryInterface $categoryRepository;
+    protected UserItemRepositoryInterface $userItemRepository;
     protected LastBotActionRepositoryInterface $lastBotActionRepository;
     protected LastBotQuestionRepositoryInterface $lastBotQuestionRepository;
     private ?LastBotAction $lastBotAction;
@@ -47,16 +49,18 @@ class Base extends BaseAbstract implements BaseInterface
         UserRepositoryInterface $userRepository,
         ItemRepositoryInterface $itemRepository,
         BotConfigurationInterface $botConfiguration,
-        CategoryRepositoryInterface $categoryRepository,
         SupportRepositoryInterface $supportRepository,
+        CategoryRepositoryInterface $categoryRepository,
+        UserItemRepositoryInterface $userItemRepository,
         LastBotActionRepositoryInterface $lastBotActionRepository,
         LastBotQuestionRepositoryInterface $lastBotQuestionRepository
     ) {
         $this->logger = $logger;
         $this->userRepository = $userRepository;
         $this->itemRepository = $itemRepository;
-        $this->categoryRepository = $categoryRepository;
         $this->supportRepository = $supportRepository;
+        $this->categoryRepository = $categoryRepository;
+        $this->userItemRepository = $userItemRepository;
         $this->lastBotActionRepository = $lastBotActionRepository;
         $this->lastBotQuestionRepository = $lastBotQuestionRepository;
 

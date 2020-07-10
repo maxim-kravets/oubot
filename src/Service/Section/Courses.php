@@ -6,6 +6,7 @@ namespace App\Service\Section;
 
 use App\Entity\Item;
 use Exception;
+use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Keyboard\Keyboard;
 
 class Courses extends Base implements CoursesInterface
@@ -278,5 +279,82 @@ class Courses extends Base implements CoursesInterface
         }
 
         $this->sendMessage($text, $keyboard, false, 'MarkdownV2');
+    }
+
+    function download(): void
+    {
+        $id = $this->getCallbackData()->id;
+        $back_cmd_id = $this->getCallbackData()->bcid;
+
+        $item = $this->itemRepository->findById($id);
+
+        $text = '✅ '.$item->getName().PHP_EOL.PHP_EOL.$item->getText();
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => $back_cmd_id
+                ])
+            ]);
+
+        try {
+            $this->api->deleteMessage([
+                'chat_id' => $this->getChatId(),
+                'message_id' => $this->getLastBotAction()->getMessageId()
+            ]);
+        } catch (TelegramSDKException $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+
+        switch ($item->getFileType()) {
+            case Item::FILE_TYPE_DOCUMENT:
+                try {
+                    $message = $this->api->sendDocument([
+                        'chat_id' => $this->getChatId(),
+                        'document' => $item->getFileId(),
+                        'caption' => $text,
+                        'reply_markup' => $keyboard
+                    ]);
+                } catch (TelegramSDKException $e) {
+                    $this->logger->critical($e->getMessage());
+                    die();
+                }
+                break;
+            case Item::FILE_TYPE_VIDEO:
+                try {
+                    $message = $this->api->sendVideo([
+                        'chat_id' => $this->getChatId(),
+                        'video' => $item->getFileId(),
+                        'caption' => $text,
+                        'reply_markup' => $keyboard
+                    ]);
+                } catch (TelegramSDKException $e) {
+                    $this->logger->critical($e->getMessage());
+                    die();
+                }
+                break;
+            case Item::FILE_TYPE_PHOTO:
+                try {
+                    $message = $this->api->sendPhoto([
+                        'chat_id' => $this->getChatId(),
+                        'photo' => $item->getFileId(),
+                        'caption' => $text,
+                        'reply_markup' => $keyboard
+                    ]);
+                } catch (TelegramSDKException $e) {
+                    $this->logger->critical($e->getMessage());
+                    die();
+                }
+                break;
+            default:
+                $this->logger->critical('Unknown file type when downloading course');
+                die();
+        }
+
+        $this->getLastBotAction()->setMessageId($message->messageId);
+        $this->lastBotActionRepository->save($this->getLastBotAction());
+
     }
 }

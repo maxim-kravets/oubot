@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Dto\Item as ItemDto;
 use App\Repository\ItemRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -61,6 +63,16 @@ class Item
      * @ORM\OneToOne(targetEntity=Promocode::class, mappedBy="item", cascade={"persist", "remove"})
      */
     private ?Promocode $promocode;
+
+    /**
+     * @ORM\OneToMany(targetEntity=UserItem::class, mappedBy="item")
+     */
+    private $userItems;
+
+    public function __construct()
+    {
+        $this->userItems = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -180,5 +192,36 @@ class Item
             ->setAboutUrl($dto->getAboutUrl())
             ->setVisible($dto->isVisible())
         ;
+    }
+
+    /**
+     * @return Collection|UserItem[]
+     */
+    public function getUserItems(): Collection
+    {
+        return $this->userItems;
+    }
+
+    public function addUserItem(UserItem $userItem): self
+    {
+        if (!$this->userItems->contains($userItem)) {
+            $this->userItems[] = $userItem;
+            $userItem->setItem($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserItem(UserItem $userItem): self
+    {
+        if ($this->userItems->contains($userItem)) {
+            $this->userItems->removeElement($userItem);
+            // set the owning side to null (unless already changed)
+            if ($userItem->getItem() === $this) {
+                $userItem->setItem(null);
+            }
+        }
+
+        return $this;
     }
 }

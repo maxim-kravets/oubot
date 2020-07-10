@@ -60,6 +60,9 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_COURSES:
                     $this->coursesSection->start();
                     break;
+                case BaseAbstract::COMMAND_COURSES_DOWNLOAD:
+                    $this->coursesSection->download();
+                    break;
                 case BaseAbstract::COMMAND_SUPPORT:
                     $this->supportSection->start();
                     break;

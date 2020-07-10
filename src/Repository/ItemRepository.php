@@ -28,7 +28,12 @@ class ItemRepository extends ServiceEntityRepository implements ItemRepositoryIn
         $this->logger = $logger;
     }
 
-    public function findByName(string $name): ?Item
+    function findById(int $id): ?Item
+    {
+        return $this->findOneBy(['id' => $id]);
+    }
+
+    function findByName(string $name): ?Item
     {
         return $this->findOneBy(['name' => $name]);
     }

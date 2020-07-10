@@ -46,10 +46,16 @@ class User
      */
     private Collection $supports;
 
+    /**
+     * @ORM\OneToMany(targetEntity=UserItem::class, mappedBy="user")
+     */
+    private $userItems;
+
     public function __construct()
     {
         $this->supports = new ArrayCollection();
         $this->lastMailingDate = new DateTime('01.01.1970');
+        $this->userItems = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -143,5 +149,36 @@ class User
             ->setChatId($dto->getChatId())
             ->setAdministrator($dto->isAdmin())
         ;
+    }
+
+    /**
+     * @return Collection|UserItem[]
+     */
+    public function getUserItems(): Collection
+    {
+        return $this->userItems;
+    }
+
+    public function addUserItem(UserItem $userItem): self
+    {
+        if (!$this->userItems->contains($userItem)) {
+            $this->userItems[] = $userItem;
+            $userItem->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserItem(UserItem $userItem): self
+    {
+        if ($this->userItems->contains($userItem)) {
+            $this->userItems->removeElement($userItem);
+            // set the owning side to null (unless already changed)
+            if ($userItem->getUser() === $this) {
+                $userItem->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }
