@@ -173,8 +173,12 @@ class Base extends BaseAbstract implements BaseInterface
         }
     }
 
-    function sendMessage(string $text, Keyboard $keyboard, bool $delete_user_answer = false): void
-    {
+    function sendMessage(
+        string $text,
+        Keyboard $keyboard,
+        bool $delete_user_answer = false,
+        ?string $parse_mode = null
+    ): void {
         $need_to_delete = true;
         if (empty($this->getLastBotAction())) {
             $dto = new LastBotActionDto($this->getChatId(), $this->getMessageId(), $this->getMessageId());
@@ -192,12 +196,18 @@ class Base extends BaseAbstract implements BaseInterface
             $this->deleteMessage($this->getLastBotAction()->getMessageId());
         }
 
+        $params = [
+            'chat_id' => $this->getChatId(),
+            'text' => $text,
+            'reply_markup' => $keyboard
+        ];
+
+        if (!empty($parse_mode)) {
+            $params['parse_mode'] = $parse_mode;
+        }
+
         try {
-            $message = $this->api->sendMessage([
-                'chat_id' => $this->getChatId(),
-                'text' => $text,
-                'reply_markup' => $keyboard
-            ]);
+            $message = $this->api->sendMessage($params);
         } catch (TelegramSDKException $e) {
             $this->getLogger()->critical($e->getMessage());
             die();

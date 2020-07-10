@@ -69,6 +69,7 @@ class Settings extends Base implements SettingsInterface
     function addCourseCategories(bool $delete_user_answer = false): void
     {
         $page = $this->getCallbackData()->p ?? 1;
+
         $limit = 5;
         $categories = $this->categoryRepository->getList($page, $limit);
         $total_count = $categories->count();

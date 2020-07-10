@@ -38,7 +38,7 @@ class CategoryRepository extends ServiceEntityRepository implements CategoryRepo
         return $this->findOneBy(['name' => $name]);
     }
 
-    function getList(int $page, int $limit = 5): Paginator
+    function getList(int $page = 1, int $limit = 5): Paginator
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()

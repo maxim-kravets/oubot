@@ -5,6 +5,7 @@ namespace App\Service;
 
 
 use App\Service\Section\Base;
+use App\Service\Section\CoursesInterface;
 use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
 use App\Service\Section\BaseAbstract;
@@ -22,6 +23,7 @@ class Bot implements BotInterface
     private MainMenuInterface $mainMenuSection;
     private SupportInterface $supportSection;
     private CabinetInterface $cabinetSection;
+    private CoursesInterface $coursesSection;
     private SettingsInterface $settingsSection;
 
     public function __construct(
@@ -30,6 +32,7 @@ class Bot implements BotInterface
         MainMenuInterface $mainMenuSection,
         SupportInterface $supportSection,
         CabinetInterface $cabinetSection,
+        CoursesInterface $coursesSection,
         SettingsInterface $settingsSection
     ) {
         $this->logger = $logger;
@@ -37,6 +40,7 @@ class Bot implements BotInterface
         $this->mainMenuSection = $mainMenuSection;
         $this->supportSection = $supportSection;
         $this->cabinetSection = $cabinetSection;
+        $this->coursesSection = $coursesSection;
         $this->settingsSection = $settingsSection;
     }
 
@@ -52,6 +56,9 @@ class Bot implements BotInterface
                     break;
                 case BaseAbstract::COMMAND_CABINET:
                     $this->cabinetSection->start();
+                    break;
+                case BaseAbstract::COMMAND_COURSES:
+                    $this->coursesSection->start();
                     break;
                 case BaseAbstract::COMMAND_SUPPORT:
                     $this->supportSection->start();

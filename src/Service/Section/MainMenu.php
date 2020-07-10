@@ -23,7 +23,7 @@ class MainMenu extends Base implements MainMenuInterface
             ], [
                 'text' => '🎓 Все курсы',
                 'callback_data' => json_encode([
-                    'c' => self::COMMAND_ALL_COURSES_LIST
+                    'c' => self::COMMAND_COURSES
                 ])
             ])
             ->row([
