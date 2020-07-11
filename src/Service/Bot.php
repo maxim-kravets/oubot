@@ -127,6 +127,21 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_PROMOCODES_REMOVE:
                     $this->promocodesSection->remove();
                     break;
+                case BaseAbstract::COMMAND_PROMOCODES_EDIT_NAME_QUESTION:
+                    $this->promocodesSection->editNameQuestion();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_EDIT_ITEM_QUESTION:
+                    $this->promocodesSection->editItemQuestion();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_EDIT_EXPIRE_QUESTION:
+                    $this->promocodesSection->editExpireQuestion();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_EDIT_DISCOUNT_QUESTION:
+                    $this->promocodesSection->editDiscountQuestion();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_EDIT_ITEM:
+                    $this->promocodesSection->editItem();
+                    break;
             }
         } elseif ($this->baseSection->isQuestionDefined()) {
             switch ($this->baseSection->getLastBotQuestion()->getType()) {
@@ -165,6 +180,15 @@ class Bot implements BotInterface
                     break;
                 case LastBotQuestion::TYPE_PROMOCODES_ADD_PROMOCODE_EXPIRE:
                     $this->promocodesSection->handleUserAnswerOnAddPromocodeExpire();
+                    break;
+                case LastBotQuestion::TYPE_PROMOCODES_EDIT_PROMOCODE_NAME:
+                    $this->promocodesSection->handleUserAnswerOnEditName();
+                    break;
+                case LastBotQuestion::TYPE_PROMOCODES_EDIT_PROMOCODE_EXPIRE:
+                    $this->promocodesSection->handleUserAnswerOnEditExpire();
+                    break;
+                case LastBotQuestion::TYPE_PROMOCODES_EDIT_PROMOCODE_DISCOUNT:
+                    $this->promocodesSection->handleUserAnswerOnEditDiscount();
                     break;
             }
         }
