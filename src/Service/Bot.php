@@ -4,17 +4,16 @@
 namespace App\Service;
 
 
-use App\Service\Section\Base;
-use App\Service\Section\CoursesInterface;
-use App\Service\Section\PromocodesInterface;
 use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
 use App\Service\Section\BaseAbstract;
 use App\Service\Section\BaseInterface;
-use App\Service\Section\SupportInterface;
 use App\Service\Section\CabinetInterface;
+use App\Service\Section\CoursesInterface;
+use App\Service\Section\SupportInterface;
 use App\Service\Section\MainMenuInterface;
 use App\Service\Section\SettingsInterface;
+use App\Service\Section\PromocodesInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class Bot implements BotInterface
@@ -193,6 +192,4 @@ class Bot implements BotInterface
             }
         }
     }
-
-
 }

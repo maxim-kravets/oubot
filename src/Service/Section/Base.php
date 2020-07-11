@@ -3,18 +3,20 @@
 
 namespace App\Service\Section;
 
-
+use App\Dto\PromocodeTransition as PromocodeTransitionDto;
 use App\Dto\LastBotAction as LastBotActionDto;
 use App\Dto\LastBotQuestion as LastBotQuestionDto;
 use App\Dto\User as UserDto;
 use App\Entity\LastBotAction;
 use App\Entity\LastBotQuestion;
+use App\Entity\PromocodeTransition;
 use App\Entity\User;
 use App\Repository\CategoryRepositoryInterface;
 use App\Repository\ItemRepositoryInterface;
 use App\Repository\LastBotActionRepositoryInterface;
 use App\Repository\LastBotQuestionRepositoryInterface;
 use App\Repository\PromocodeRepositoryInterface;
+use App\Repository\PromocodeTransitionRepositoryInterface;
 use App\Repository\SupportRepositoryInterface;
 use App\Repository\UserItemRepositoryInterface;
 use App\Repository\UserRepositoryInterface;
@@ -42,6 +44,7 @@ class Base extends BaseAbstract implements BaseInterface
     protected PromocodeRepositoryInterface $promocodeRepository;
     protected LastBotActionRepositoryInterface $lastBotActionRepository;
     protected LastBotQuestionRepositoryInterface $lastBotQuestionRepository;
+    protected PromocodeTransitionRepositoryInterface $promocodeTransitionRepository;
     private ?LastBotAction $lastBotAction;
     private ?LastBotQuestion $lastBotQuestion;
     private ?User $user;
@@ -56,7 +59,8 @@ class Base extends BaseAbstract implements BaseInterface
         UserItemRepositoryInterface $userItemRepository,
         PromocodeRepositoryInterface $promocodeRepository,
         LastBotActionRepositoryInterface $lastBotActionRepository,
-        LastBotQuestionRepositoryInterface $lastBotQuestionRepository
+        LastBotQuestionRepositoryInterface $lastBotQuestionRepository,
+        PromocodeTransitionRepositoryInterface $promocodeTransitionRepository
     ) {
         $this->logger = $logger;
         $this->userRepository = $userRepository;
@@ -67,6 +71,7 @@ class Base extends BaseAbstract implements BaseInterface
         $this->promocodeRepository = $promocodeRepository;
         $this->lastBotActionRepository = $lastBotActionRepository;
         $this->lastBotQuestionRepository = $lastBotQuestionRepository;
+        $this->promocodeTransitionRepository = $promocodeTransitionRepository;
 
         try {
             $this->api = new Api($botConfiguration->getToken());
@@ -86,11 +91,6 @@ class Base extends BaseAbstract implements BaseInterface
             case 'message':
                 $this->setChatId($this->getWebhookUpdate()->getChat()->get('id'));
                 $this->setText($this->getWebhookUpdate()->getMessage()->get('text'));
-
-                if ($this->getText() === '/start') {
-                    $this->setCommand(self::COMMAND_MAIN_MENU);
-                }
-
                 $this->setMessageId($this->getWebhookUpdate()->getMessage()->get('message_id'));
                 break;
             default:
@@ -109,6 +109,33 @@ class Base extends BaseAbstract implements BaseInterface
         }
 
         $this->setUser($user);
+
+        if (stripos($this->getText(), '/start') !== false) {
+            $this->setCommand(self::COMMAND_MAIN_MENU);
+
+            $promocode_name = trim(str_replace('/start', '', $this->getText()));
+
+            if (!empty($promocode_name)) {
+                $promocode = $this->promocodeRepository->findByName($promocode_name);
+
+                if (!empty($promocode)) {
+
+                    $is_transited = $this->promocodeTransitionRepository->isUserTransitByPromocode(
+                        $this->getUser(),
+                        $promocode
+                    );
+
+                    if (!$is_transited) {
+                        $dto = new PromocodeTransitionDto($promocode, $this->getUser());
+                        $promocodeTransition = PromocodeTransition::create($dto);
+                        $this->promocodeTransitionRepository->save($promocodeTransition);
+
+                        $promocode->increaseTransitionsCount();
+                        $this->promocodeRepository->save($promocode);
+                    }
+                }
+            }
+        }
 
         $this->setLastBotAction($this->lastBotActionRepository->findByChatId($this->getChatId()));
 
@@ -191,7 +218,7 @@ class Base extends BaseAbstract implements BaseInterface
             $this->setLastBotAction(LastBotAction::create($dto));
             $this->lastBotActionRepository->save($this->getLastBotAction());
             $need_to_delete = false;
-        } elseif ($this->getText() === '/start') {
+        } elseif (stripos($this->getText(), '/start') !== false) {
             $this->deleteMessage($this->getLastBotAction()->getStartMessageId());
             $this->getLastBotAction()->setStartMessageId($this->getMessageId());
         } elseif ($delete_user_answer) {

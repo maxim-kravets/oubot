@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Dto\Promocode as PromocodeDto;
 use App\Repository\PromocodeRepository;
 use DateTimeInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -56,6 +58,16 @@ class Promocode
      * @ORM\Column(type="datetime")
      */
     private DateTimeInterface $expire;
+
+    /**
+     * @ORM\OneToMany(targetEntity=PromocodeTransition::class, mappedBy="promocode")
+     */
+    private $promocodeTransitions;
+
+    public function __construct()
+    {
+        $this->promocodeTransitions = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -110,6 +122,13 @@ class Promocode
         return $this;
     }
 
+    function increasePurchaseCount(): self
+    {
+        $this->purchasesCount = $this->purchasesCount + 1;
+
+        return  $this;
+    }
+
     public function getTransitionsCount(): ?int
     {
         return $this->transitionsCount;
@@ -118,6 +137,13 @@ class Promocode
     public function setTransitionsCount(int $transitionsCount): self
     {
         $this->transitionsCount = $transitionsCount;
+
+        return $this;
+    }
+
+    function increaseTransitionsCount(): self
+    {
+        $this->transitionsCount = $this->transitionsCount + 1;
 
         return $this;
     }
@@ -154,5 +180,36 @@ class Promocode
             ->setType($dto->getType())
             ->setDiscount($dto->getDiscount())
             ->setExpire($dto->getExpire());
+    }
+
+    /**
+     * @return Collection|PromocodeTransition[]
+     */
+    public function getPromocodeTransitions(): Collection
+    {
+        return $this->promocodeTransitions;
+    }
+
+    public function addPromocodeTransition(PromocodeTransition $promocodeTransition): self
+    {
+        if (!$this->promocodeTransitions->contains($promocodeTransition)) {
+            $this->promocodeTransitions[] = $promocodeTransition;
+            $promocodeTransition->setPromocode($this);
+        }
+
+        return $this;
+    }
+
+    public function removePromocodeTransition(PromocodeTransition $promocodeTransition): self
+    {
+        if ($this->promocodeTransitions->contains($promocodeTransition)) {
+            $this->promocodeTransitions->removeElement($promocodeTransition);
+            // set the owning side to null (unless already changed)
+            if ($promocodeTransition->getPromocode() === $this) {
+                $promocodeTransition->setPromocode(null);
+            }
+        }
+
+        return $this;
     }
 }

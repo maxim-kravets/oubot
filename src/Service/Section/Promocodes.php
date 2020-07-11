@@ -251,7 +251,7 @@ class Promocodes extends Base implements PromocodesInterface
         if (empty($discount)) {
             $text = '⚠️ Вы прислали что-то не то, введите текст:';
         } else {
-            if (preg_match('/^[1-9][0-9]?$|^100$/', $discount) === 0) {
+            if (preg_match_all('/^[1-9][0-9]?$|^100$/', $discount) === 0) {
                 $text = '⚠️ Недопустимое значение, введите число в диапазон от 1 до 100';
             } else {
                 $this->getLastBotQuestion()
@@ -736,7 +736,7 @@ class Promocodes extends Base implements PromocodesInterface
             $text = '⚠️ Вы прислали что-то не то, введите текст:';
             $this->sendMessage($text, $keyboard, true);
         } else {
-            if (preg_match('/^[1-9][0-9]?$|^100$/', $discount) === 0) {
+            if (preg_match_all('/^[1-9][0-9]?$|^100$/', $discount) === 0) {
                 $text = '⚠️ Недопустимое значение, введите число в диапазон от 1 до 100';
                 $this->sendMessage($text, $keyboard, true);
             } else {
