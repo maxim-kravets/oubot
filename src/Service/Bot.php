@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Service\Section\Base;
 use App\Service\Section\CoursesInterface;
+use App\Service\Section\PromocodesInterface;
 use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
 use App\Service\Section\BaseAbstract;
@@ -25,6 +26,7 @@ class Bot implements BotInterface
     private CabinetInterface $cabinetSection;
     private CoursesInterface $coursesSection;
     private SettingsInterface $settingsSection;
+    private PromocodesInterface $promocodesSection;
 
     public function __construct(
         LoggerInterface $logger,
@@ -33,7 +35,8 @@ class Bot implements BotInterface
         SupportInterface $supportSection,
         CabinetInterface $cabinetSection,
         CoursesInterface $coursesSection,
-        SettingsInterface $settingsSection
+        SettingsInterface $settingsSection,
+        PromocodesInterface $promocodesSection
     ) {
         $this->logger = $logger;
         $this->baseSection = $baseSection;
@@ -42,6 +45,7 @@ class Bot implements BotInterface
         $this->cabinetSection = $cabinetSection;
         $this->coursesSection = $coursesSection;
         $this->settingsSection = $settingsSection;
+        $this->promocodesSection = $promocodesSection;
     }
 
     public function handleRequest(Request $request): void
@@ -62,6 +66,9 @@ class Bot implements BotInterface
                     break;
                 case BaseAbstract::COMMAND_COURSES_DOWNLOAD:
                     $this->coursesSection->download();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES:
+                    $this->promocodesSection->start();
                     break;
                 case BaseAbstract::COMMAND_SUPPORT:
                     $this->supportSection->start();
@@ -99,6 +106,27 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_SUPPORT_ADMIN_QUESTION:
                     $this->supportSection->question();
                     break;
+                case BaseAbstract::COMMAND_PROMOCODES_CREATE:
+                    $this->promocodesSection->create();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_CREATE_ITEMS:
+                    $this->promocodesSection->courses();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_CREATE_SKIP_ITEM:
+                    $this->promocodesSection->skipItem();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_CREATE_SELECT_ITEM:
+                    $this->promocodesSection->selectItem();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_CREATE_SELECT_TYPE:
+                    $this->promocodesSection->selectType();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_INFO:
+                    $this->promocodesSection->info();
+                    break;
+                case BaseAbstract::COMMAND_PROMOCODES_REMOVE:
+                    $this->promocodesSection->remove();
+                    break;
             }
         } elseif ($this->baseSection->isQuestionDefined()) {
             switch ($this->baseSection->getLastBotQuestion()->getType()) {
@@ -128,6 +156,15 @@ class Bot implements BotInterface
                     break;
                 case LastBotQuestion::TYPE_SUPPORT_ADMIN_ANSWER:
                     $this->supportSection->handleAdminAnswerOnAnswerQuestion();
+                    break;
+                case LastBotQuestion::TYPE_PROMOCODES_ADD_PROMOCODE_NAME:
+                    $this->promocodesSection->handleUserAnswerOnAddPromocodeName();
+                    break;
+                case LastBotQuestion::TYPE_PROMOCODES_ADD_PROMOCODE_DISCOUNT:
+                    $this->promocodesSection->handleUserAnswerOnAddPromocodeDiscount();
+                    break;
+                case LastBotQuestion::TYPE_PROMOCODES_ADD_PROMOCODE_EXPIRE:
+                    $this->promocodesSection->handleUserAnswerOnAddPromocodeExpire();
                     break;
             }
         }

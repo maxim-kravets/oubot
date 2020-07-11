@@ -4,7 +4,11 @@ namespace App\Repository;
 
 use App\Entity\Promocode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
 
 /**
  * @method Promocode|null find($id, $lockMode = null, $lockVersion = null)
@@ -12,39 +16,62 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Promocode[]    findAll()
  * @method Promocode[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class PromocodeRepository extends ServiceEntityRepository
+class PromocodeRepository extends ServiceEntityRepository implements PromocodeRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    private EntityManagerInterface $em;
+    private LoggerInterface $logger;
+
+    public function __construct(ManagerRegistry $registry, LoggerInterface $logger)
     {
         parent::__construct($registry, Promocode::class);
+        $this->em = $this->getEntityManager();
+        $this->logger = $logger;
     }
 
-    // /**
-    //  * @return Promocode[] Returns an array of Promocode objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    function findById(int $id): ?Promocode
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
+        return $this->findOneBy(['id' => $id]);
     }
-    */
 
-    /*
-    public function findOneBySomeField($value): ?Promocode
+    function findByName(string $name): ?Promocode
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        return $this->findOneBy(['name' => $name]);
     }
-    */
+
+    function getList(int $page = 1, int $limit = 5): Paginator
+    {
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('p')
+            ->from('App\Entity\Promocode', 'p')
+            ->orderBy('p.id', 'DESC')
+            ->getQuery()
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+        ;
+
+        return new Paginator($query, false);
+    }
+
+    function save(Promocode $entity): void
+    {
+        try {
+            $this->em->persist($entity);
+            $this->em->flush();
+        } catch (ORMException $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+    }
+
+    function remove(Promocode $entity): void
+    {
+        try {
+            $this->em->remove($entity);
+            $this->em->flush();
+        } catch (ORMException $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+    }
 }

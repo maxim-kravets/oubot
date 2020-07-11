@@ -14,8 +14,6 @@ class Cabinet extends Base implements CabinetInterface
         $this->clearLastBotQuestion();
         $page = $this->getCallbackData()->p ?? 1;
 
-        $limit = 5;
-
         $text = '👤 Мой кабинет'.PHP_EOL.PHP_EOL.'Здесь вы можете посмотреть свои приобретенные курсы.';
         $keyboard = (new Keyboard())
             ->inline()
@@ -26,6 +24,7 @@ class Cabinet extends Base implements CabinetInterface
                 ])
             ]);
 
+        $limit = 5;
         $usersItems = $this->userItemRepository->getListByUserId($this->getUser()->getId(), $page, $limit);
         $pages = ceil($usersItems->count() / $limit);
 

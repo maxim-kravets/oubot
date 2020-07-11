@@ -49,7 +49,7 @@ class User
     /**
      * @ORM\OneToMany(targetEntity=UserItem::class, mappedBy="user")
      */
-    private $userItems;
+    private Collection $userItems;
 
     public function __construct()
     {

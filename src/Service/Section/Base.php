@@ -14,6 +14,7 @@ use App\Repository\CategoryRepositoryInterface;
 use App\Repository\ItemRepositoryInterface;
 use App\Repository\LastBotActionRepositoryInterface;
 use App\Repository\LastBotQuestionRepositoryInterface;
+use App\Repository\PromocodeRepositoryInterface;
 use App\Repository\SupportRepositoryInterface;
 use App\Repository\UserItemRepositoryInterface;
 use App\Repository\UserRepositoryInterface;
@@ -38,6 +39,7 @@ class Base extends BaseAbstract implements BaseInterface
     protected SupportRepositoryInterface $supportRepository;
     protected CategoryRepositoryInterface $categoryRepository;
     protected UserItemRepositoryInterface $userItemRepository;
+    protected PromocodeRepositoryInterface $promocodeRepository;
     protected LastBotActionRepositoryInterface $lastBotActionRepository;
     protected LastBotQuestionRepositoryInterface $lastBotQuestionRepository;
     private ?LastBotAction $lastBotAction;
@@ -52,6 +54,7 @@ class Base extends BaseAbstract implements BaseInterface
         SupportRepositoryInterface $supportRepository,
         CategoryRepositoryInterface $categoryRepository,
         UserItemRepositoryInterface $userItemRepository,
+        PromocodeRepositoryInterface $promocodeRepository,
         LastBotActionRepositoryInterface $lastBotActionRepository,
         LastBotQuestionRepositoryInterface $lastBotQuestionRepository
     ) {
@@ -61,6 +64,7 @@ class Base extends BaseAbstract implements BaseInterface
         $this->supportRepository = $supportRepository;
         $this->categoryRepository = $categoryRepository;
         $this->userItemRepository = $userItemRepository;
+        $this->promocodeRepository = $promocodeRepository;
         $this->lastBotActionRepository = $lastBotActionRepository;
         $this->lastBotQuestionRepository = $lastBotQuestionRepository;
 

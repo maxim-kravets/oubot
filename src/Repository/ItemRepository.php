@@ -44,17 +44,18 @@ class ItemRepository extends ServiceEntityRepository implements ItemRepositoryIn
             ->createQueryBuilder()
             ->select('i')
             ->from('App\Entity\Item', 'i')
-            ->where('i.visible=1')
+            ->where('i.visible=:visible')
+            ->setParameter('visible', true)
         ;
 
         if (!empty($category_id)) {
-            $query
-                ->where('i.category=:category_id')
+            $query = $query
+                ->andWhere('i.category=:category_id')
                 ->setParameter('category_id', $category_id)
             ;
         }
 
-        $query
+        $query = $query
             ->orderBy('i.id', 'DESC')
             ->getQuery()
             ->setFirstResult(($page - 1) * $limit)

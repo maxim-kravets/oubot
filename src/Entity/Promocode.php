@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
+use App\Dto\Promocode as PromocodeDto;
 use App\Repository\PromocodeRepository;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,47 +12,50 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Promocode
 {
+    const TYPE_REF = 1;
+    const TYPE_ONE_TIME = 2;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
-     * @ORM\OneToOne(targetEntity=Item::class, inversedBy="promocode", cascade={"persist", "remove"})
+     * @ORM\OneToOne(targetEntity=Item::class, inversedBy="promocode")
      */
-    private $item;
-
-    /**
-     * @ORM\Column(type="integer")
-     */
-    private $type;
+    private ?Item $item;
 
     /**
      * @ORM\Column(type="integer")
      */
-    private $purchasesCount;
+    private int $type;
 
     /**
      * @ORM\Column(type="integer")
      */
-    private $transitionsCount;
+    private int $purchasesCount = 0;
 
     /**
      * @ORM\Column(type="integer")
      */
-    private $discount;
+    private int $transitionsCount = 0;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private int $discount;
 
     /**
      * @ORM\Column(type="datetime")
      */
-    private $expire;
+    private DateTimeInterface $expire;
 
     public function getId(): ?int
     {
@@ -129,15 +134,25 @@ class Promocode
         return $this;
     }
 
-    public function getExpire(): ?\DateTimeInterface
+    public function getExpire(): ?DateTimeInterface
     {
         return $this->expire;
     }
 
-    public function setExpire(\DateTimeInterface $expire): self
+    public function setExpire(DateTimeInterface $expire): self
     {
         $this->expire = $expire;
 
         return $this;
+    }
+
+    static function create(PromocodeDto $dto): self
+    {
+        return (new Promocode())
+            ->setName($dto->getName())
+            ->setItem($dto->getItem())
+            ->setType($dto->getType())
+            ->setDiscount($dto->getDiscount())
+            ->setExpire($dto->getExpire());
     }
 }
