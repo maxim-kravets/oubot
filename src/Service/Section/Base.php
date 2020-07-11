@@ -80,6 +80,11 @@ class Base extends BaseAbstract implements BaseInterface
             die();
         }
 
+        $this->init();
+    }
+
+    function init(): void
+    {
         $this->setWebhookUpdate($this->api->getWebhookUpdate());
 
         switch ($this->getWebhookUpdate()->detectType()) {

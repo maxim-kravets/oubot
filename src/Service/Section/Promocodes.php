@@ -314,7 +314,7 @@ class Promocodes extends Base implements PromocodesInterface
         }
     }
 
-    function info(?int $id = null, ?string $additional_text_to_header = null): void
+    function info(?int $id = null, ?string $additional_text_to_header = null, bool $delete_user_answer = false): void
     {
         if (empty($id)) {
             $id = $this->getCallbackData()->id;
@@ -385,7 +385,7 @@ class Promocodes extends Base implements PromocodesInterface
                 ])
             ]);
 
-        $this->sendMessage($text, $keyboard);
+        $this->sendMessage($text, $keyboard, $delete_user_answer);
     }
 
     function courses(bool $delete_user_answer = false): void
@@ -625,7 +625,7 @@ class Promocodes extends Base implements PromocodesInterface
         $promocode->setItem($item);
         $this->promocodeRepository->save($promocode);
 
-        $this->info($id, '✅ Промокод успешно обновлен!');
+        $this->info($id, '✅ Промокод успешно обновлен!', true);
     }
 
     function editExpireQuestion(): void
@@ -688,7 +688,7 @@ class Promocodes extends Base implements PromocodesInterface
                 $promocode->setExpire($expireDateTime);
                 $this->promocodeRepository->save($promocode);
 
-                $this->info($id, '✅ Промокод успешно обновлен!');
+                $this->info($id, '✅ Промокод успешно обновлен!', true);
             }
         }
     }
@@ -744,7 +744,7 @@ class Promocodes extends Base implements PromocodesInterface
                 $promocode->setDiscount($discount);
                 $this->promocodeRepository->save($promocode);
 
-                $this->info($id, '✅ Промокод успешно обновлен!');
+                $this->info($id, '✅ Промокод успешно обновлен!', true);
             }
         }
     }
