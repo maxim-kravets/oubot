@@ -6,12 +6,17 @@ namespace App\Service;
 
 use App\Dto\Order as OrderDto;
 use App\Dto\UserItem as UserItemDto;
+use App\Dto\UserPromocode as UserPromocodeDto;
 use App\Entity\Item;
 use App\Entity\Order;
+use App\Entity\Promocode;
 use App\Entity\User;
 use App\Entity\UserItem;
+use App\Entity\UserPromocode;
 use App\Repository\OrderRepositoryInterface;
+use App\Repository\PromocodeRepositoryInterface;
 use App\Repository\UserItemRepositoryInterface;
+use App\Repository\UserPromocodeRepositoryInterface;
 use App\Service\Section\BaseAbstract;
 use Psr\Log\LoggerInterface;
 use Telegram\Bot\Api;
@@ -28,6 +33,8 @@ class PaymentHelper implements PaymentHelperInterface
     private OrderRepositoryInterface $orderRepository;
     private BotConfigurationInterface $botConfiguration;
     private UserItemRepositoryInterface $userItemRepository;
+    private PromocodeRepositoryInterface $promocodeRepository;
+    private UserPromocodeRepositoryInterface $userPromocodeRepository;
 
     public function __construct(
         string $wayforpay_account,
@@ -36,14 +43,19 @@ class PaymentHelper implements PaymentHelperInterface
         OrderRepositoryInterface $orderRepository,
         BotConfiguration $botConfiguration,
         LoggerInterface $logger,
-        UserItemRepositoryInterface $userItemRepository
+        UserItemRepositoryInterface $userItemRepository,
+        PromocodeRepositoryInterface $promocodeRepository,
+        UserPromocodeRepositoryInterface $userPromocodeRepository
     ) {
+        $this->logger = $logger;
         $this->wayforpay_account = $wayforpay_account;
         $this->wayforpay_secret = $wayforpay_secret;
         $this->wayforpay_domain = $wayforpay_domain;
         $this->orderRepository = $orderRepository;
         $this->botConfiguration = $botConfiguration;
         $this->userItemRepository = $userItemRepository;
+        $this->promocodeRepository = $promocodeRepository;
+        $this->userPromocodeRepository = $userPromocodeRepository;
 
         try {
             $this->api = new Api($botConfiguration->getToken());
@@ -87,6 +99,51 @@ class PaymentHelper implements PaymentHelperInterface
         return 'https://'.$this->wayforpay_domain.'/payment/user/'.$user->getId().'/item/'.$item->getId();
     }
 
+    public function activatePromocode(Order $order, Promocode $promocode): float
+    {
+        $new_price = $order->getAmount() - (($order->getAmount() * $promocode->getDiscount()) / 100);
+
+        if ($new_price === 0) {
+            $new_price = 0;
+
+            $order->setStatus(Order::STATUS_FULL_PRICE_DISCOUNT);
+
+            $dto = new UserItemDto($order->getUser(), $order->getItem());
+            $userItem = UserItem::create($dto);
+            $this->userItemRepository->save($userItem);
+
+            $text = '✅ Курс успешно куплен!';
+            $keyboard = (new Keyboard())
+                ->inline()
+                ->row([
+                    'text' => 'Закрыть',
+                    'callback_data' => json_encode([
+                        'c' => BaseAbstract::COMMAND_DELETE_MESSAGE
+                    ])
+                ]);
+
+            try {
+                $this->api->sendMessage([
+                    'chat_id' => $order->getUser()->getChatId(),
+                    'text' => $text,
+                    'reply_markup' => $keyboard
+                ]);
+            } catch (TelegramSDKException $e) {
+                $this->logger->critical($e->getMessage());
+                die();
+            }
+
+        } elseif ($new_price < 1) {
+            $new_price = 1;
+        }
+
+        $order->setAmount($new_price);
+        $order->setPromocode($promocode);
+        $this->orderRepository->save($order);
+
+        return $new_price;
+    }
+
     public function handleResponse(string $payment_response): string
     {
         $payment_response = json_decode($payment_response, true);
@@ -112,10 +169,26 @@ class PaymentHelper implements PaymentHelperInterface
             $userItem = UserItem::create($dto);
             $this->userItemRepository->save($userItem);
 
+            $promocode = $order->getPromocode();
+
+            if (!empty($promocode)) {
+                $dto = new UserPromocodeDto($order->getUser(), $promocode);
+                $userPromocode = UserPromocode::create($dto);
+                $this->userPromocodeRepository->save($userPromocode);
+
+                $promocode->increasePurchaseCount();
+                $this->promocodeRepository->save($promocode);
+            }
+
             $text = '✅ Курс успешно куплен!';
         } elseif ($payment_response['transactionStatus'] === 'Declined') {
             $order->setStatus(Order::STATUS_DECLINED);
         } elseif ($payment_response['transactionStatus'] === 'Refunded') {
+            $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
+            $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
+            $this->userItemRepository->remove($userItem);
+            $order->setStatus(Order::STATUS_REFUNDED);
+        } elseif ($payment_response['transactionStatus'] === 'Expired') {
             $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
             $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
             $this->userItemRepository->remove($userItem);
