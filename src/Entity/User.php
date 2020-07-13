@@ -56,12 +56,18 @@ class User
      */
     private $promocodeTransitions;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="user")
+     */
+    private $orders;
+
     public function __construct()
     {
         $this->supports = new ArrayCollection();
         $this->lastMailingDate = new DateTime('01.01.1970');
         $this->userItems = new ArrayCollection();
         $this->promocodeTransitions = new ArrayCollection();
+        $this->orders = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -213,6 +219,37 @@ class User
             // set the owning side to null (unless already changed)
             if ($promocodeTransition->getUser() === $this) {
                 $promocodeTransition->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Order[]
+     */
+    public function getOrders(): Collection
+    {
+        return $this->orders;
+    }
+
+    public function addOrder(Order $order): self
+    {
+        if (!$this->orders->contains($order)) {
+            $this->orders[] = $order;
+            $order->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrder(Order $order): self
+    {
+        if ($this->orders->contains($order)) {
+            $this->orders->removeElement($order);
+            // set the owning side to null (unless already changed)
+            if ($order->getUser() === $this) {
+                $order->setUser(null);
             }
         }
 

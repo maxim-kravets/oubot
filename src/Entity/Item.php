@@ -67,11 +67,22 @@ class Item
     /**
      * @ORM\OneToMany(targetEntity=UserItem::class, mappedBy="item")
      */
-    private $userItems;
+    private Collection $userItems;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="item")
+     */
+    private Collection $orders;
+
+    /**
+     * @ORM\Column(type="float")
+     */
+    private $price;
 
     public function __construct()
     {
         $this->userItems = new ArrayCollection();
+        $this->orders = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -221,6 +232,49 @@ class Item
                 $userItem->setItem(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Order[]
+     */
+    public function getOrders(): Collection
+    {
+        return $this->orders;
+    }
+
+    public function addOrder(Order $order): self
+    {
+        if (!$this->orders->contains($order)) {
+            $this->orders[] = $order;
+            $order->setItem($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrder(Order $order): self
+    {
+        if ($this->orders->contains($order)) {
+            $this->orders->removeElement($order);
+            // set the owning side to null (unless already changed)
+            if ($order->getItem() === $this) {
+                $order->setItem(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getPrice(): ?float
+    {
+        return $this->price;
+    }
+
+    public function setPrice(float $price): self
+    {
+        $this->price = $price;
 
         return $this;
     }

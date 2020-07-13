@@ -30,6 +30,14 @@ class UserItemRepository extends ServiceEntityRepository implements UserItemRepo
         $this->logger = $logger;
     }
 
+    function getUserItem(User $user, Item $item): ?UserItem
+    {
+        return $this->findOneBy([
+            'user' => $user->getId(),
+            'item' => $item->getId()
+        ]);
+    }
+
     function isUserHasItem(User $user, Item $item): bool
     {
         return !empty($this->findOneBy([
@@ -59,6 +67,17 @@ class UserItemRepository extends ServiceEntityRepository implements UserItemRepo
     {
         try {
             $this->em->persist($entity);
+            $this->em->flush();
+        } catch (ORMException $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+    }
+
+    function remove(UserItem $entity): void
+    {
+        try {
+            $this->em->remove($entity);
             $this->em->flush();
         } catch (ORMException $e) {
             $this->logger->critical($e->getMessage());

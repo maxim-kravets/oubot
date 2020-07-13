@@ -21,6 +21,7 @@ use App\Repository\SupportRepositoryInterface;
 use App\Repository\UserItemRepositoryInterface;
 use App\Repository\UserRepositoryInterface;
 use App\Service\BotConfigurationInterface;
+use App\Service\PaymentHelperInterface;
 use Psr\Log\LoggerInterface;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
@@ -36,6 +37,7 @@ class Base extends BaseAbstract implements BaseInterface
     protected int $message_id;
     private ?string $text = null;
     protected Update $webhookUpdate;
+    protected PaymentHelperInterface $paymentHelper;
     protected UserRepositoryInterface $userRepository;
     protected ItemRepositoryInterface $itemRepository;
     protected SupportRepositoryInterface $supportRepository;
@@ -51,6 +53,7 @@ class Base extends BaseAbstract implements BaseInterface
 
     function __construct(
         LoggerInterface $logger,
+        PaymentHelperInterface $paymentHelper,
         UserRepositoryInterface $userRepository,
         ItemRepositoryInterface $itemRepository,
         BotConfigurationInterface $botConfiguration,
@@ -63,6 +66,7 @@ class Base extends BaseAbstract implements BaseInterface
         PromocodeTransitionRepositoryInterface $promocodeTransitionRepository
     ) {
         $this->logger = $logger;
+        $this->paymentHelper = $paymentHelper;
         $this->userRepository = $userRepository;
         $this->itemRepository = $itemRepository;
         $this->supportRepository = $supportRepository;

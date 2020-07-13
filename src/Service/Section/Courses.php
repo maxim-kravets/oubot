@@ -203,6 +203,22 @@ class Courses extends Base implements CoursesInterface
     {
         $page = $this->getCallbackData()->p ?? 1;
 
+        if (empty($category_id)) {
+            $back_btn = [
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_MAIN_MENU
+                ])
+            ];
+        } else {
+            $back_btn = [
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_COURSES
+                ])
+            ];
+        }
+
         $items = $this->itemRepository->getList($page, 1, $category_id);
         $pages = $items->count();
 
@@ -210,41 +226,11 @@ class Courses extends Base implements CoursesInterface
             /**
              * @var Item $item
              */
-            $item = $items->getIterator()[$page - 1];
+            $item = $items->getIterator()[0];
 
             $text = '['.$item->getName().']('.$item->getAboutUrl().')';
 
-            if ($this->userItemRepository->isUserHasItem($this->getUser(), $item)) {
-                $back_cmd = [
-                    'c' => self::COMMAND_COURSES,
-                    'p' => $page
-                ];
-
-                if (!empty($category_id)) {
-                    $back_cmd['cid'] = $category_id;
-                }
-
-                $first_cell = [
-                    'text' => 'Скачать',
-                    'callback_data' => json_encode([
-                        'c' => self::COMMAND_COURSES_DOWNLOAD,
-                        'id' => $item->getId(),
-                        'bc' => $back_cmd
-                    ])
-                ];
-            } else {
-                $first_cell = [
-                    'text' => '💸 Приобрести',
-                    'url' => 'http://google.com'
-                ];
-            }
-
-            $keyboard = (new Keyboard())
-                ->inline()
-                ->row($first_cell, [
-                    'text' => '📖 Подробнее',
-                    'url' => $item->getAboutUrl()
-                ]);
+            $keyboard = (new Keyboard())->inline();
 
             if ($pages > 1) {
 
@@ -281,24 +267,42 @@ class Courses extends Base implements CoursesInterface
                     ]);
             }
 
+            if ($this->userItemRepository->isUserHasItem($this->getUser(), $item)) {
+                $back_cmd = [
+                    'c' => self::COMMAND_COURSES,
+                    'p' => $page
+                ];
+
+                if (!empty($category_id)) {
+                    $back_cmd['cid'] = $category_id;
+                }
+
+                $first_cell = [
+                    'text' => '✅ Скачать',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_COURSES_DOWNLOAD,
+                        'id' => $item->getId(),
+                        'bc' => $back_cmd
+                    ])
+                ];
+            } else {
+                $first_cell = [
+                    'text' => '💸 Приобрести',
+                    'url' => $this->paymentHelper->getBuyUrl($this->getUser(), $item)
+                ];
+            }
 
             $keyboard
-                ->row([
-                    'text' => 'Назад',
-                    'callback_data' => json_encode([
-                        'c' => self::COMMAND_MAIN_MENU
-                    ])
+                ->row($first_cell, [
+                    'text' => '📖 Подробнее',
+                    'url' => $item->getAboutUrl()
                 ]);
+
+
+            $keyboard->row($back_btn);
         } else {
             $text = '⚠️ Курсов нет';
-            $keyboard = (new Keyboard())
-                ->inline()
-                ->row([
-                    'text' => 'Назад',
-                    'callback_data' => json_encode([
-                        'c' => self::COMMAND_MAIN_MENU
-                    ])
-                ]);
+            $keyboard = (new Keyboard())->inline()->row($back_btn);
         }
 
         $this->sendMessage($text, $keyboard, false, 'MarkdownV2');

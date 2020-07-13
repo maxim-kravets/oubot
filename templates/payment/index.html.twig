@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Оплата{% endblock %}
+
+{% block body %}
+    <form method="post" action="https://secure.wayforpay.com/pay" accept-charset="utf-8">
+        <h3>{{ item_name }}</h3>
+        {% for key,value in data %}
+            <input type="text" name="{{ key }}" value="{{ value }}" hidden>
+        {% endfor %}
+        <button type="submit">Оплатить</button>
+    </form>
+{% endblock %}

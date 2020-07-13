@@ -37,4 +37,11 @@ services:
     App\Service\Section\MailingInterface: '@App\Service\Section\Mailing'
     App\Service\Section\PromocodesInterface: '@App\Service\Section\Promocodes'
     App\Service\Section\SettingsInterface: '@App\Service\Section\Settings'
+    App\Service\PaymentHelperInterface: '@App\Service\PaymentHelper'
+
+    App\Service\PaymentHelper:
+        arguments:
+            $wayforpay_account: '%env(WAYFORPAY_MERCHANT_ACCOUNT)%'
+            $wayforpay_secret: '%env(WAYFORPAY_MERCHANT_SECRET)%'
+            $wayforpay_domain: '%env(WAYFORPAY_MERCHANT_DOMAIN)%'
 

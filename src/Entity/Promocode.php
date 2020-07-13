@@ -64,9 +64,15 @@ class Promocode
      */
     private $promocodeTransitions;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="promocode")
+     */
+    private $orders;
+
     public function __construct()
     {
         $this->promocodeTransitions = new ArrayCollection();
+        $this->orders = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -207,6 +213,37 @@ class Promocode
             // set the owning side to null (unless already changed)
             if ($promocodeTransition->getPromocode() === $this) {
                 $promocodeTransition->setPromocode(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Order[]
+     */
+    public function getOrders(): Collection
+    {
+        return $this->orders;
+    }
+
+    public function addOrder(Order $order): self
+    {
+        if (!$this->orders->contains($order)) {
+            $this->orders[] = $order;
+            $order->setPromocode($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrder(Order $order): self
+    {
+        if ($this->orders->contains($order)) {
+            $this->orders->removeElement($order);
+            // set the owning side to null (unless already changed)
+            if ($order->getPromocode() === $this) {
+                $order->setPromocode(null);
             }
         }
 
