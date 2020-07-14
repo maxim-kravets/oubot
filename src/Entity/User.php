@@ -54,17 +54,17 @@ class User
     /**
      * @ORM\OneToMany(targetEntity=PromocodeTransition::class, mappedBy="user")
      */
-    private $promocodeTransitions;
+    private Collection $promocodeTransitions;
 
     /**
      * @ORM\OneToMany(targetEntity=Order::class, mappedBy="user")
      */
-    private $orders;
+    private Collection $orders;
 
     /**
      * @ORM\OneToMany(targetEntity=UserPromocode::class, mappedBy="user")
      */
-    private $userPromocodes;
+    private Collection $userPromocodes;
 
     public function __construct()
     {

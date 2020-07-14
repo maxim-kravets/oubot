@@ -4,6 +4,7 @@
 namespace App\Service;
 
 
+use App\Service\Section\Base;
 use App\Service\Section\MailingInterface;
 use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
@@ -99,6 +100,36 @@ class Bot implements BotInterface
                     break;
                 case BaseAbstract::COMMAND_MAILING_REMOVE_FILE:
                     $this->mailingSection->removeFile();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM:
+                    $this->mailingSection->whom();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_ALL:
+                    $this->mailingSection->whomSelectAll();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_ALL_UNSELECT:
+                    $this->mailingSection->whomUnselectAll();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_PROMOCODES:
+                    $this->mailingSection->whomPromocodes();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_PROMOCODE:
+                    $this->mailingSection->whomSelectPromocode();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_PROMOCODE_UNSELECT:
+                    $this->mailingSection->whomUnselectPromocode();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_COURSES:
+                    $this->mailingSection->whomCourses();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_COURSE:
+                    $this->mailingSection->whomSelectCourse();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_WHOM_COURSE_UNSELECT:
+                    $this->mailingSection->whomUnselectCourse();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_SEND:
+                    $this->mailingSection->send();
                     break;
                 case BaseAbstract::COMMAND_SETTINGS:
                     $this->settingsSection->start();

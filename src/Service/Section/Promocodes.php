@@ -309,7 +309,7 @@ class Promocodes extends Base implements PromocodesInterface
                 $promocode = Promocode::create($dto);
                 $this->promocodeRepository->save($promocode);
 
-                $this->info($promocode->getId());
+                $this->info($promocode->getId(), null, true);
             }
         }
     }

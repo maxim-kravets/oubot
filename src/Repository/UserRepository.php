@@ -2,7 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\Item;
+use App\Entity\Promocode;
 use App\Entity\User;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMException;
@@ -61,6 +64,42 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
             ->select('u')
             ->from('App\Entity\User', 'u')
             ->where('u.administrator=1')
+            ->orderBy('u.id', 'DESC')
+            ->getQuery()
+        ;
+
+        return new Paginator($query, false);
+    }
+
+    public function getListForMailing(?Item $item = null, ?Promocode $promocode = null): Paginator
+    {
+        $query = $this->createQueryBuilder('u')
+            ->select('u', 'up', 'ui')
+            ->leftJoin('u.userItems', 'ui')
+            ->leftJoin('u.userPromocodes', 'up')
+//            ->where('u.administrator=1')
+        ;
+
+        if (!empty($item)) {
+            $query
+                ->andWhere('ui.item=:itemId')
+                ->setParameter('itemId', $item->getId())
+            ;
+        }
+
+        if (!empty($promocode)) {
+            $query
+                ->andWhere('up.promocode=:promocodeId')
+                ->setParameter('promocodeId', $promocode->getId())
+            ;
+        }
+
+        $query
+            ->andWhere('u.lastMailingDate<:date')
+            ->setParameter('date', (new DateTime('-30days')))
+        ;
+
+        $query
             ->orderBy('u.id', 'DESC')
             ->getQuery()
         ;
