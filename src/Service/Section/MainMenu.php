@@ -31,24 +31,28 @@ class MainMenu extends Base implements MainMenuInterface
                 'callback_data' => json_encode([
                     'c' => self::COMMAND_SUPPORT
                 ])
-            ])
-            ->row([
-                'text' => '✉️ Рассылка',
-                'callback_data' => json_encode([
-                    'c' => self::COMMAND_MAILING
-                ])
-            ], [
-                'text' => '🚀 Промокоды',
-                'callback_data' => json_encode([
-                    'c' => self::COMMAND_PROMOCODES
-                ])
-            ])
-            ->row([
-                'text' => '⚙️ Настройки',
-                'callback_data' => json_encode([
-                    'c' => self::COMMAND_SETTINGS
-                ])
             ]);
+
+        if ($this->getUser()->isAdministrator()) {
+            $keyboard
+                ->row([
+                    'text' => '✉️ Рассылка',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_MAILING
+                    ])
+                ], [
+                    'text' => '🚀 Промокоды',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_PROMOCODES
+                    ])
+                ])
+                ->row([
+                    'text' => '⚙️ Настройки',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_SETTINGS
+                    ])
+                ]);
+        }
 
         $this->sendMessage($text, $keyboard);
     }

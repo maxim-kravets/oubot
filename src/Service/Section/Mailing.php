@@ -804,7 +804,6 @@ class Mailing extends Base implements MailingInterface
                                 ]);
                             } catch (TelegramSDKException $e) {
                                 $this->logger->critical($e->getMessage());
-                                die();
                             }
                             break;
                         case BaseAbstract::FILE_TYPE_VIDEO:
@@ -817,7 +816,6 @@ class Mailing extends Base implements MailingInterface
                                 ]);
                             } catch (TelegramSDKException $e) {
                                 $this->logger->critical($e->getMessage());
-                                die();
                             }
                             break;
                         case BaseAbstract::FILE_TYPE_DOCUMENT:
@@ -830,7 +828,6 @@ class Mailing extends Base implements MailingInterface
                                 ]);
                             } catch (TelegramSDKException $e) {
                                 $this->logger->critical($e->getMessage());
-                                die();
                             }
                             break;
                     }

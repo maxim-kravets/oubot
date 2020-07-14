@@ -5,6 +5,7 @@ namespace App\Service\Section;
 
 
 use App\Entity\Item;
+use App\Entity\LastBotQuestion;
 use Exception;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Keyboard\Keyboard;
@@ -13,7 +14,9 @@ class Courses extends Base implements CoursesInterface
 {
     function start(): void
     {
-        $this->clearLastBotQuestion();
+        if ($this->getLastBotQuestion()->getType() !== LastBotQuestion::TYPE_WHERE_TO_RETURN) {
+            $this->clearLastBotQuestion();
+        }
         $category_id = $this->getCallbackData()->cid ?? null;
 
         $categories = $this->categoryRepository->getList();
@@ -28,6 +31,15 @@ class Courses extends Base implements CoursesInterface
     function categories(): void
     {
         $page = $this->getCallbackData()->p ?? 1;
+        $back_cmd = $this->getCallbackData()->bc ?? null;
+
+        if (!empty($back_cmd)) {
+            $this->getLastBotQuestion()
+                ->addAnswer('cmd', $back_cmd)
+                ->setType(LastBotQuestion::TYPE_WHERE_TO_RETURN)
+            ;
+            $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+        }
 
         $limit = 5;
         $categories = $this->categoryRepository->getList($page, $limit);
@@ -188,13 +200,23 @@ class Courses extends Base implements CoursesInterface
                 ]);
         }
 
-        $keyboard
-            ->row([
+        if ($this->getLastBotQuestion()->getType() === LastBotQuestion::TYPE_WHERE_TO_RETURN) {
+            $back_btn = [
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['cmd']
+                ])
+            ];
+        } else {
+            $back_btn = [
                 'text' => 'Назад',
                 'callback_data' => json_encode([
                     'c' => self::COMMAND_MAIN_MENU
                 ])
-            ]);
+            ];
+        }
+
+        $keyboard->row($back_btn);
 
         $this->sendMessage($text, $keyboard);
     }
@@ -202,8 +224,24 @@ class Courses extends Base implements CoursesInterface
     function courses(?int $category_id = null): void
     {
         $page = $this->getCallbackData()->p ?? 1;
+        $back_cmd = $this->getCallbackData()->bc ?? null;
 
-        if (empty($category_id)) {
+        if (!empty($back_cmd)) {
+            $this->getLastBotQuestion()
+                ->addAnswer('cmd', $back_cmd)
+                ->setType(LastBotQuestion::TYPE_WHERE_TO_RETURN)
+            ;
+            $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+        }
+
+        if ($this->getLastBotQuestion()->getType() === LastBotQuestion::TYPE_WHERE_TO_RETURN && empty($category_id)) {
+            $back_btn = [
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['cmd']
+                ])
+            ];
+        } elseif (empty($category_id)) {
             $back_btn = [
                 'text' => 'Назад',
                 'callback_data' => json_encode([
@@ -297,7 +335,6 @@ class Courses extends Base implements CoursesInterface
                     'text' => '📖 Подробнее',
                     'url' => $item->getAboutUrl()
                 ]);
-
 
             $keyboard->row($back_btn);
         } else {

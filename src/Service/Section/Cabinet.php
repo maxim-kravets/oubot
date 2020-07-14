@@ -20,7 +20,8 @@ class Cabinet extends Base implements CabinetInterface
             ->row([
                 'text' => '🎓 Приобрести курс',
                 'callback_data' => json_encode([
-                    'c' => self::COMMAND_CABINET_BUY_COURSE_LIST
+                    'c' => self::COMMAND_COURSES,
+                    'bc' => self::COMMAND_CABINET
                 ])
             ]);
 
@@ -34,18 +35,16 @@ class Cabinet extends Base implements CabinetInterface
              * @var UserItem $userItem
              */
             foreach ($usersItems as $userItem) {
-                $back_cmd = [
-                    'c' => self::COMMAND_CABINET,
-                    'p' => $page
-                ];
-
                 $keyboard
                     ->row([
                         'text' => '✅ '.$userItem->getItem()->getName(),
                         'callback_data' => json_encode([
                             'c' => self::COMMAND_COURSES_DOWNLOAD,
                             'id' => $userItem->getItem()->getId(),
-                            'bc' => $back_cmd
+                            'bc' => [
+                                'c' => self::COMMAND_CABINET,
+                                'p' => $page
+                            ]
                         ])
                     ]);
             }

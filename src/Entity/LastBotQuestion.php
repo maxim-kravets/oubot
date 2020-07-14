@@ -35,6 +35,7 @@ class LastBotQuestion
     const TYPE_MAILING_TEXT = 23;
     const TYPE_MAILING_FILE = 21;
     const TYPE_MAILING_BUTTONS = 22;
+    const TYPE_WHERE_TO_RETURN = 24;
 
     /**
      * @ORM\Id()

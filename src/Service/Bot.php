@@ -4,8 +4,6 @@
 namespace App\Service;
 
 
-use App\Service\Section\Base;
-use App\Service\Section\MailingInterface;
 use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
 use App\Service\Section\BaseAbstract;
@@ -13,6 +11,7 @@ use App\Service\Section\BaseInterface;
 use App\Service\Section\CabinetInterface;
 use App\Service\Section\CoursesInterface;
 use App\Service\Section\SupportInterface;
+use App\Service\Section\MailingInterface;
 use App\Service\Section\MainMenuInterface;
 use App\Service\Section\SettingsInterface;
 use App\Service\Section\PromocodesInterface;
@@ -22,32 +21,32 @@ class Bot implements BotInterface
 {
     private LoggerInterface $logger;
     private BaseInterface $baseSection;
-    private MainMenuInterface $mainMenuSection;
     private SupportInterface $supportSection;
     private CabinetInterface $cabinetSection;
     private CoursesInterface $coursesSection;
     private MailingInterface $mailingSection;
+    private MainMenuInterface $mainMenuSection;
     private SettingsInterface $settingsSection;
     private PromocodesInterface $promocodesSection;
 
     public function __construct(
         LoggerInterface $logger,
         BaseInterface $baseSection,
-        MainMenuInterface $mainMenuSection,
         SupportInterface $supportSection,
         CabinetInterface $cabinetSection,
         CoursesInterface $coursesSection,
         MailingInterface $mailingSection,
+        MainMenuInterface $mainMenuSection,
         SettingsInterface $settingsSection,
         PromocodesInterface $promocodesSection
     ) {
         $this->logger = $logger;
         $this->baseSection = $baseSection;
-        $this->mainMenuSection = $mainMenuSection;
         $this->supportSection = $supportSection;
         $this->cabinetSection = $cabinetSection;
         $this->coursesSection = $coursesSection;
         $this->mailingSection = $mailingSection;
+        $this->mainMenuSection = $mainMenuSection;
         $this->settingsSection = $settingsSection;
         $this->promocodesSection = $promocodesSection;
     }
@@ -261,6 +260,8 @@ class Bot implements BotInterface
                     $this->mailingSection->handleUserAnswerOnFile();
                     break;
             }
+        } else {
+            $this->baseSection->deleteMessage();
         }
     }
 }
