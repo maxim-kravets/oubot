@@ -13,6 +13,7 @@ class Item
     private string $text;
     private string $file_id;
     private int $file_type;
+    private int $price;
     private string $about_url;
     private bool $visible;
 
@@ -22,6 +23,7 @@ class Item
         string $text,
         string $file_id,
         int $file_type,
+        int $price,
         string $about_url,
         bool $visible
     ) {
@@ -30,6 +32,7 @@ class Item
         $this->text = $text;
         $this->file_id = $file_id;
         $this->file_type = $file_type;
+        $this->price = $price;
         $this->about_url = $about_url;
         $this->visible = $visible;
     }
@@ -68,6 +71,11 @@ class Item
     public function getAboutUrl(): string
     {
         return $this->about_url;
+    }
+
+    public function getPrice(): int
+    {
+        return $this->price;
     }
 
 }

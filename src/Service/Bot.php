@@ -156,6 +156,9 @@ class Bot implements BotInterface
                 case LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_FILE:
                     $this->settingsSection->handleUserAnswerOnAddCourseFile();
                     break;
+                case LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_PRICE:
+                    $this->settingsSection->handleUserAnswerOnAddCoursePrice();
+                    break;
                 case LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_ABOUT_URL:
                     $this->settingsSection->handleUserAnswerOnAddCourseAboutUrl();
                     break;

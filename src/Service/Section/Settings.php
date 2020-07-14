@@ -471,9 +471,51 @@ class Settings extends Base implements SettingsInterface
         } else {
 
             $this->getLastBotQuestion()
-                ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_ABOUT_URL)
+                ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_PRICE)
                 ->addAnswer('file_id', $file_id)
                 ->addAnswer('file_type', $file_type);
+            $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+
+            $text = '💬 Введите стоимость:';
+            $keyboard = (new Keyboard())
+                ->inline()
+                ->row([
+                    'text' => 'Назад',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
+                        'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT
+                    ])
+                ]);
+        }
+
+        $this->sendMessage($text, $keyboard, $delete_user_answer);
+    }
+
+    function handleUserAnswerOnAddCoursePrice(): void
+    {
+        $delete_user_answer = true;
+        if ($this->isBackToPreviousQuestionCmd()) {
+            $price = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['price'];
+            $delete_user_answer = false;
+        } else {
+            $price = $this->getText();
+        }
+
+        if (empty($price) || (preg_match_all('/(?<=\s|^)\d+(?=\s|$)/', $price) === 0)) {
+            $text = '⚠️ Вы прислали что-то не то, пришлите число:';
+            $keyboard = (new Keyboard())
+                ->inline()
+                ->row([
+                    'text' => 'Назад',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
+                        'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT
+                    ])
+                ]);
+        } else {
+            $this->getLastBotQuestion()
+                ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_ABOUT_URL)
+                ->addAnswer('price', $price);
             $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
 
             $text = '💬 Введите ссылку на описание:';
@@ -483,7 +525,7 @@ class Settings extends Base implements SettingsInterface
                     'text' => 'Назад',
                     'callback_data' => json_encode([
                         'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
-                        'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT
+                        'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_FILE
                     ])
                 ]);
         }
@@ -534,6 +576,7 @@ class Settings extends Base implements SettingsInterface
         $text = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['text'];
         $file_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_id'];
         $file_type = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_type'];
+        $price = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['price'];
         $about_url = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['about_url'];
         $visible = json_decode($this->getWebhookUpdate()->get('callback_query')->get('data'))->v;
 
@@ -549,7 +592,7 @@ class Settings extends Base implements SettingsInterface
             $this->categoryRepository->save($category);
         }
 
-        $dto = new ItemDto($name, $category, $text, $file_id, $file_type, $about_url, $visible);
+        $dto = new ItemDto($name, $category, $text, $file_id, $file_type, $price, $about_url, $visible);
         $item = Item::create($dto);
         $this->itemRepository->save($item);
 

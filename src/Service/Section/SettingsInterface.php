@@ -15,6 +15,7 @@ interface SettingsInterface
     function handleUserAnswerOnAddCourseCategory(): void;
     function handleUserAnswerOnAddCourseText(): void;
     function handleUserAnswerOnAddCourseFile(): void;
+    function handleUserAnswerOnAddCoursePrice(): void;
     function handleUserAnswerOnAddCourseAboutUrl(): void;
     function addCourseSetVisibility(): void;
     function adminsList(): void;

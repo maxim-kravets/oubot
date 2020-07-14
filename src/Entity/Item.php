@@ -200,6 +200,7 @@ class Item
             ->setText($dto->getText())
             ->setFileId($dto->getFileId())
             ->setFileType($dto->getFileType())
+            ->setPrice($dto->getPrice())
             ->setAboutUrl($dto->getAboutUrl())
             ->setVisible($dto->isVisible())
         ;
