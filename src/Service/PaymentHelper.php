@@ -161,8 +161,9 @@ class PaymentHelper implements PaymentHelperInterface
                 ])
             ]);
 
+        $is_order_status_changed = false;
         $text = '⚠️ При оплате курса произошла ошибка';
-        if ($payment_response['transactionStatus'] === 'Approved') {
+        if ($payment_response['transactionStatus'] === 'Approved' && $order->getStatus() !== Order::STATUS_APPROVED) {
             $order->setStatus(Order::STATUS_APPROVED);
 
             $dto = new UserItemDto($order->getUser(), $order->getItem());
@@ -181,29 +182,37 @@ class PaymentHelper implements PaymentHelperInterface
             }
 
             $text = '✅ Курс успешно куплен!';
-        } elseif ($payment_response['transactionStatus'] === 'Declined') {
+            $is_order_status_changed = true;
+        } elseif ($payment_response['transactionStatus'] === 'Declined' && $order->getStatus() !== Order::STATUS_DECLINED) {
             $order->setStatus(Order::STATUS_DECLINED);
-        } elseif ($payment_response['transactionStatus'] === 'Refunded') {
+            $is_order_status_changed = true;
+        } elseif ($payment_response['transactionStatus'] === 'Refunded' && $order->getStatus() !== Order::STATUS_REFUNDED) {
             $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
             $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
             $this->userItemRepository->remove($userItem);
             $order->setStatus(Order::STATUS_REFUNDED);
-        } elseif ($payment_response['transactionStatus'] === 'Expired') {
-            $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
-            $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
-            $this->userItemRepository->remove($userItem);
-            $order->setStatus(Order::STATUS_REFUNDED);
+            $is_order_status_changed = true;
+        } elseif ($payment_response['transactionStatus'] === 'Expired' && $order->getStatus() !== Order::STATUS_EXPIRED) {
+
+            // TODO:
+//            $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
+//            $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
+//            $this->userItemRepository->remove($userItem);
+            $order->setStatus(Order::STATUS_EXPIRED);
+//            $is_order_status_changed = true;
         }
 
-        try {
-            $this->api->sendMessage([
-                'chat_id' => $order->getUser()->getChatId(),
-                'text' => $text,
-                'reply_markup' => $keyboard
-            ]);
-        } catch (TelegramSDKException $e) {
-            $this->logger->critical($e->getMessage());
-            die();
+        if ($is_order_status_changed) {
+            try {
+                $this->api->sendMessage([
+                    'chat_id' => $order->getUser()->getChatId(),
+                    'text' => $text,
+                    'reply_markup' => $keyboard
+                ]);
+            } catch (TelegramSDKException $e) {
+                $this->logger->critical($e->getMessage());
+                die();
+            }
         }
 
         $this->orderRepository->save($order);

@@ -18,6 +18,7 @@ class Order
     const STATUS_NOT_PAID = 1;
     const STATUS_APPROVED = 2;
     const STATUS_REFUNDED = 3;
+    const STATUS_EXPIRED = 5;
     const STATUS_FULL_PRICE_DISCOUNT = 4;
 
     /**
