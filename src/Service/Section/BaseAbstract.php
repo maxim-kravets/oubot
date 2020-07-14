@@ -6,6 +6,10 @@ namespace App\Service\Section;
 
 abstract class BaseAbstract
 {
+    const FILE_TYPE_DOCUMENT = 1;
+    const FILE_TYPE_VIDEO = 2;
+    const FILE_TYPE_PHOTO = 3;
+
     const COMMAND_UNDEFINED = 0;
     const COMMAND_BACK_TO_PREVIOUS_QUESTION = 18;
     const COMMAND_DELETE_MESSAGE = 26;
@@ -18,7 +22,6 @@ abstract class BaseAbstract
     const COMMAND_CABINET_BUY_COURSE_LIST = 5;
     const COMMAND_SUPPORT = 25;
     const COMMAND_SUPPORT_ADMIN_QUESTION = 10;
-    const COMMAND_MAILING = 12;
     const COMMAND_PROMOCODES = 13;
     const COMMAND_PROMOCODES_CREATE = 29;
     const COMMAND_PROMOCODES_CREATE_ITEMS = 33;
@@ -42,4 +45,14 @@ abstract class BaseAbstract
     const COMMAND_SETTINGS_ADD_ADMIN = 20;
     const COMMAND_SETTINGS_REMOVE_ADMIN = 21;
     const COMMAND_SETTINGS_REMOVE_ADMIN_CONFIRM = 22;
+    const COMMAND_MAILING = 12;
+    const COMMAND_MAILING_MENU = 48;
+    const COMMAND_MAILING_BUTTONS = 42;
+    const COMMAND_MAILING_FILE = 43;
+    const COMMAND_MAILING_COURSES = 44;
+    const COMMAND_MAILING_COURSE = 45;
+    const COMMAND_MAILING_REMOVE_COURSE = 47;
+    const COMMAND_MAILING_REMOVE_TEXT = 46;
+    const COMMAND_MAILING_REMOVE_FILE = 49;
+    const COMMAND_MAILING_WHOM = 50;
 }

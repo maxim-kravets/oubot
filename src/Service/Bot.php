@@ -4,6 +4,7 @@
 namespace App\Service;
 
 
+use App\Service\Section\MailingInterface;
 use Psr\Log\LoggerInterface;
 use App\Entity\LastBotQuestion;
 use App\Service\Section\BaseAbstract;
@@ -24,6 +25,7 @@ class Bot implements BotInterface
     private SupportInterface $supportSection;
     private CabinetInterface $cabinetSection;
     private CoursesInterface $coursesSection;
+    private MailingInterface $mailingSection;
     private SettingsInterface $settingsSection;
     private PromocodesInterface $promocodesSection;
 
@@ -34,6 +36,7 @@ class Bot implements BotInterface
         SupportInterface $supportSection,
         CabinetInterface $cabinetSection,
         CoursesInterface $coursesSection,
+        MailingInterface $mailingSection,
         SettingsInterface $settingsSection,
         PromocodesInterface $promocodesSection
     ) {
@@ -43,6 +46,7 @@ class Bot implements BotInterface
         $this->supportSection = $supportSection;
         $this->cabinetSection = $cabinetSection;
         $this->coursesSection = $coursesSection;
+        $this->mailingSection = $mailingSection;
         $this->settingsSection = $settingsSection;
         $this->promocodesSection = $promocodesSection;
     }
@@ -71,6 +75,30 @@ class Bot implements BotInterface
                     break;
                 case BaseAbstract::COMMAND_SUPPORT:
                     $this->supportSection->start();
+                    break;
+                case BaseAbstract::COMMAND_MAILING:
+                    $this->mailingSection->start();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_MENU:
+                    $this->mailingSection->menu();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_REMOVE_TEXT:
+                    $this->mailingSection->removeText();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_COURSES:
+                    $this->mailingSection->courses();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_COURSE:
+                    $this->mailingSection->course();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_BUTTONS:
+                    $this->mailingSection->buttons();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_FILE:
+                    $this->mailingSection->file();
+                    break;
+                case BaseAbstract::COMMAND_MAILING_REMOVE_FILE:
+                    $this->mailingSection->removeFile();
                     break;
                 case BaseAbstract::COMMAND_SETTINGS:
                     $this->settingsSection->start();
@@ -191,6 +219,15 @@ class Bot implements BotInterface
                     break;
                 case LastBotQuestion::TYPE_PROMOCODES_EDIT_PROMOCODE_DISCOUNT:
                     $this->promocodesSection->handleUserAnswerOnEditDiscount();
+                    break;
+                case LastBotQuestion::TYPE_MAILING_TEXT:
+                    $this->mailingSection->handleUserAnswerOnText();
+                    break;
+                case LastBotQuestion::TYPE_MAILING_BUTTONS:
+                    $this->mailingSection->handleUserAnswerOnButtons();
+                    break;
+                case LastBotQuestion::TYPE_MAILING_FILE:
+                    $this->mailingSection->handleUserAnswerOnFile();
                     break;
             }
         }
