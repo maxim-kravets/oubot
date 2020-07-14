@@ -30,7 +30,7 @@ class Promocode
     private string $name;
 
     /**
-     * @ORM\OneToOne(targetEntity=Item::class, inversedBy="promocode")
+     * @ORM\ManyToOne(targetEntity=Item::class, inversedBy="promocode")
      */
     private ?Item $item;
 
@@ -62,17 +62,17 @@ class Promocode
     /**
      * @ORM\OneToMany(targetEntity=PromocodeTransition::class, mappedBy="promocode")
      */
-    private $promocodeTransitions;
+    private Collection $promocodeTransitions;
 
     /**
      * @ORM\OneToMany(targetEntity=Order::class, mappedBy="promocode")
      */
-    private $orders;
+    private Collection $orders;
 
     /**
      * @ORM\OneToMany(targetEntity=UserPromocode::class, mappedBy="promocode")
      */
-    private $userPromocodes;
+    private Collection $userPromocodes;
 
     public function __construct()
     {
