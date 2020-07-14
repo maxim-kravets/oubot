@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Order;
 use App\Entity\Promocode;
 use App\Repository\ItemRepositoryInterface;
 use App\Repository\OrderRepositoryInterface;
@@ -87,7 +88,7 @@ class PaymentController extends AbstractController
             {
                 return new JsonResponse([
                     'activated' => false,
-                    'reason' => 'Order not found'
+                    'reason' => 'Заказ не найден'
                 ]);
             }
 

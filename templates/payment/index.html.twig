@@ -6,8 +6,43 @@
     <form method="post" action="https://secure.wayforpay.com/pay" accept-charset="utf-8">
         <h3>{{ item_name }}</h3>
         {% for key,value in data %}
-            <input type="text" name="{{ key }}" value="{{ value }}" hidden>
+            <input type="text" name="{{ key }}" value="{{ value }}" id="{{ key|replace({'[]':''}) }}" hidden>
         {% endfor %}
+        <div id="promocode-section">
+            <label for="promocode">Промокод</label>
+            <input type="text" name="promocode" id="promocode">
+            <a href="{{ path('payment_activate_promocode') }}" id="activate-promocode">активировать</a>
+        </div>
+        <br>
+        <div id="promocode-activation-status"></div>
+        <br>
+        <br>
         <button type="submit">Оплатить</button>
     </form>
+    <script>
+        $(function() {
+
+            $('#activate-promocode').click(function (e) {
+
+                e.preventDefault();
+
+                order_id = $('#orderReference').val();
+                promocode_name = $('#promocode').val();
+
+                $.ajax({
+                    method: 'POST',
+                    url: '/payment/activate-promocode',
+                    data: {order_id: order_id, promocode_name: promocode_name},
+                    success: function (data) {
+                        if (data['activated']) {
+                            $('#productPrice').val(data['new_price']);
+                            $('#promocode-activation-status').text(data['reason']);
+                        } else {
+                            $('#promocode-activation-status').text(data['reason']);
+                        }
+                    }
+                })
+            });
+        });
+    </script>
 {% endblock %}

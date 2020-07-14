@@ -150,72 +150,68 @@ class PaymentHelper implements PaymentHelperInterface
 
         $order = $this->orderRepository->findById($payment_response['orderReference']);
 
-        $order->setRawResponse($payment_response);
+        if ($order->getStatus() === Order::STATUS_REFUNDED) {
+            $order->setRawResponse($payment_response);
 
-        $keyboard = (new Keyboard())
-            ->inline()
-            ->row([
-                'text' => 'Закрыть',
-                'callback_data' => json_encode([
-                    'c' => BaseAbstract::COMMAND_DELETE_MESSAGE
-                ])
-            ]);
-
-        $is_order_status_changed = false;
-        $text = '⚠️ При оплате курса произошла ошибка';
-        if ($payment_response['transactionStatus'] === 'Approved' && $order->getStatus() !== Order::STATUS_APPROVED) {
-            $order->setStatus(Order::STATUS_APPROVED);
-
-            $dto = new UserItemDto($order->getUser(), $order->getItem());
-            $userItem = UserItem::create($dto);
-            $this->userItemRepository->save($userItem);
-
-            $promocode = $order->getPromocode();
-
-            if (!empty($promocode)) {
-                $dto = new UserPromocodeDto($order->getUser(), $promocode);
-                $userPromocode = UserPromocode::create($dto);
-                $this->userPromocodeRepository->save($userPromocode);
-
-                $promocode->increasePurchaseCount();
-                $this->promocodeRepository->save($promocode);
-            }
-
-            $text = '✅ Курс успешно куплен!';
-            $is_order_status_changed = true;
-        } elseif ($payment_response['transactionStatus'] === 'Declined' && $order->getStatus() !== Order::STATUS_DECLINED) {
-            $order->setStatus(Order::STATUS_DECLINED);
-            $is_order_status_changed = true;
-        } elseif ($payment_response['transactionStatus'] === 'Refunded' && $order->getStatus() !== Order::STATUS_REFUNDED) {
-            $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
-            $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
-            $this->userItemRepository->remove($userItem);
-            $order->setStatus(Order::STATUS_REFUNDED);
-            $is_order_status_changed = true;
-        } elseif ($payment_response['transactionStatus'] === 'Expired' && $order->getStatus() !== Order::STATUS_EXPIRED) {
-
-            // TODO:
-//            $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
-//            $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
-//            $this->userItemRepository->remove($userItem);
-            $order->setStatus(Order::STATUS_EXPIRED);
-//            $is_order_status_changed = true;
-        }
-
-        if ($is_order_status_changed) {
-            try {
-                $this->api->sendMessage([
-                    'chat_id' => $order->getUser()->getChatId(),
-                    'text' => $text,
-                    'reply_markup' => $keyboard
+            $keyboard = (new Keyboard())
+                ->inline()
+                ->row([
+                    'text' => 'Закрыть',
+                    'callback_data' => json_encode([
+                        'c' => BaseAbstract::COMMAND_DELETE_MESSAGE
+                    ])
                 ]);
-            } catch (TelegramSDKException $e) {
-                $this->logger->critical($e->getMessage());
-                die();
-            }
-        }
 
-        $this->orderRepository->save($order);
+            $is_order_status_changed = false;
+            $text = '⚠️ При оплате курса произошла ошибка';
+            if ($payment_response['transactionStatus'] === 'Approved' && $order->getStatus() !== Order::STATUS_APPROVED) {
+                $order->setStatus(Order::STATUS_APPROVED);
+
+                $dto = new UserItemDto($order->getUser(), $order->getItem());
+                $userItem = UserItem::create($dto);
+                $this->userItemRepository->save($userItem);
+
+                $promocode = $order->getPromocode();
+
+                if (!empty($promocode)) {
+                    $dto = new UserPromocodeDto($order->getUser(), $promocode);
+                    $userPromocode = UserPromocode::create($dto);
+                    $this->userPromocodeRepository->save($userPromocode);
+
+                    $promocode->increasePurchaseCount();
+                    $this->promocodeRepository->save($promocode);
+                }
+
+                $text = '✅ Курс успешно куплен!';
+                $is_order_status_changed = true;
+            } elseif ($payment_response['transactionStatus'] === 'Declined' && $order->getStatus() !== Order::STATUS_DECLINED) {
+                $order->setStatus(Order::STATUS_DECLINED);
+                $is_order_status_changed = true;
+            } elseif ($payment_response['transactionStatus'] === 'Refunded' && $order->getStatus() !== Order::STATUS_REFUNDED) {
+                $text = '⚠️ При оплате курса произошла ошибка. Доступ к курсу заблокирован. Средства будут возвращены в ближайшее время.';
+                $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
+                $this->userItemRepository->remove($userItem);
+                $order->setStatus(Order::STATUS_REFUNDED);
+                $is_order_status_changed = true;
+            } elseif ($payment_response['transactionStatus'] === 'Expired' && $order->getStatus() !== Order::STATUS_EXPIRED) {
+                $order->setStatus(Order::STATUS_EXPIRED);
+            }
+
+            if ($is_order_status_changed) {
+                try {
+                    $this->api->sendMessage([
+                        'chat_id' => $order->getUser()->getChatId(),
+                        'text' => $text,
+                        'reply_markup' => $keyboard
+                    ]);
+                } catch (TelegramSDKException $e) {
+                    $this->logger->critical($e->getMessage());
+                    die();
+                }
+            }
+
+            $this->orderRepository->save($order);
+        }
 
         $string = $order->getId().';accept;'.time();
         $signature = hash_hmac('md5', $string, $this->wayforpay_secret);
