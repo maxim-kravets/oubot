@@ -7,6 +7,7 @@ use App\Entity\Promocode;
 use App\Repository\ItemRepositoryInterface;
 use App\Repository\OrderRepositoryInterface;
 use App\Repository\PromocodeRepositoryInterface;
+use App\Repository\UserItemRepositoryInterface;
 use App\Repository\UserPromocodeRepositoryInterface;
 use App\Repository\UserRepositoryInterface;
 use App\Service\PaymentHelperInterface;
@@ -22,6 +23,7 @@ class PaymentController extends AbstractController
     private UserRepositoryInterface $userRepository;
     private ItemRepositoryInterface $itemRepository;
     private OrderRepositoryInterface $orderRepository;
+    private UserItemRepositoryInterface $userItemRepository;
     private PromocodeRepositoryInterface $promocodeRepository;
     private UserPromocodeRepositoryInterface $userPromocodeRepository;
 
@@ -30,6 +32,7 @@ class PaymentController extends AbstractController
         UserRepositoryInterface $userRepository,
         ItemRepositoryInterface $itemRepository,
         OrderRepositoryInterface $orderRepository,
+        UserItemRepositoryInterface $userItemRepository,
         PromocodeRepositoryInterface $promocodeRepository,
         UserPromocodeRepositoryInterface $userPromocodeRepository
     ) {
@@ -37,6 +40,7 @@ class PaymentController extends AbstractController
         $this->userRepository = $userRepository;
         $this->itemRepository = $itemRepository;
         $this->orderRepository = $orderRepository;
+        $this->userItemRepository = $userItemRepository;
         $this->promocodeRepository = $promocodeRepository;
         $this->userPromocodeRepository = $userPromocodeRepository;
     }
@@ -61,13 +65,19 @@ class PaymentController extends AbstractController
             return new Response('Курс не найден', 404);
         }
 
+        $is_bought = false;
+        if ($this->userItemRepository->isUserHasItem($user, $item)) {
+            $is_bought = true;
+        }
+
         $order = $this->paymentHelper->createOrder($user, $item);
 
         $data = $this->paymentHelper->getFormData($order);
 
         return $this->render('payment/index.html.twig', [
-            'item_name' => $item->getName(),
+            'item' => $item,
             'data' => $data,
+            'is_bought' => $is_bought
         ]);
     }
 
@@ -108,6 +118,13 @@ class PaymentController extends AbstractController
                 return new JsonResponse([
                     'activated' => false,
                     'reason' => 'Вы уже использовали этот промокод'
+                ]);
+            }
+
+            if ($promocode->getItem() !== $order->getItem()) {
+                return new JsonResponse([
+                    'activated' => false,
+                    'reason' => 'Этот промокод не распространяется на данный товар'
                 ]);
             }
 

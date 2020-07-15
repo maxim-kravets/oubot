@@ -103,7 +103,7 @@ class PaymentHelper implements PaymentHelperInterface
     {
         $new_price = $order->getAmount() - (($order->getAmount() * $promocode->getDiscount()) / 100);
 
-        if ($new_price === 0) {
+        if ($new_price == 0) {
             $new_price = 0;
 
             $order->setStatus(Order::STATUS_FULL_PRICE_DISCOUNT);
