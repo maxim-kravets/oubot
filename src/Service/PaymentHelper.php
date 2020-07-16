@@ -177,7 +177,11 @@ class PaymentHelper implements PaymentHelperInterface
 
             $is_order_status_changed = false;
             $text = '⚠️ При оплате курса произошла ошибка';
-            if ($payment_response['transactionStatus'] === 'Approved' && $order->getStatus() !== Order::STATUS_APPROVED) {
+            if (
+                $payment_response['transactionStatus'] === 'Approved' &&
+                $order->getStatus() !== Order::STATUS_APPROVED &&
+                !$this->userItemRepository->isUserHasItem($order->getUser(), $order->getItem())
+            ) {
                 $order->setStatus(Order::STATUS_APPROVED);
 
                 $dto = new UserItemDto($order->getUser(), $order->getItem());
