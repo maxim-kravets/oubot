@@ -35,14 +35,14 @@ class Item
     private string $text;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $fileId;
+    private ?string $fileId = null;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      */
-    private int $fileType;
+    private ?int $fileType = null;
 
     /**
      * @ORM\ManyToOne(targetEntity=Category::class, inversedBy="items")
@@ -119,7 +119,7 @@ class Item
         return $this->fileId;
     }
 
-    public function setFileId(string $fileId): self
+    public function setFileId(?string $fileId): self
     {
         $this->fileId = $fileId;
 
@@ -131,7 +131,7 @@ class Item
         return $this->fileType;
     }
 
-    public function setFileType(int $fileType): self
+    public function setFileType(?int $fileType): self
     {
         $this->fileType = $fileType;
 

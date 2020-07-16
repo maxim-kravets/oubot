@@ -285,7 +285,7 @@ class Promocodes extends Base implements PromocodesInterface
             $this->sendMessage($text, $keyboard, true);
         } else {
 
-            if (preg_match_all('/^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.((?:19|20)\d{2})\s*$/', $expire) === 0) {
+            if (preg_match_all('/^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.\d{4}\s*$/', $expire) === 0) {
                 $text = '⚠️ Дата должна соответствовать следующему формату: дд.мм.гггг';
                 $this->sendMessage($text, $keyboard, true);
             } else {
@@ -297,19 +297,29 @@ class Promocodes extends Base implements PromocodesInterface
                     die();
                 }
 
-                $name = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['name'];
-                $item_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['item_id'];
+                if ($expireDateTime < (new DateTime())) {
+                    $text = '⚠️ Дата окончания не может быть меньше текущей';
+                    $this->sendMessage($text, $keyboard, true);
+                } else {
 
-                $item = $this->itemRepository->findById($item_id);
+                    $name = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['name'];
+                    $item_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['item_id'];
 
-                $type = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['type'];
-                $discount = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['discount'];
+                    if (!empty($item_id)) {
+                        $item = $this->itemRepository->findById($item_id);
+                    } else {
+                        $item = null;
+                    }
 
-                $dto = new PromocodeDto($name, $item, $type, $discount, $expireDateTime);
-                $promocode = Promocode::create($dto);
-                $this->promocodeRepository->save($promocode);
+                    $type = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['type'];
+                    $discount = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['discount'];
 
-                $this->info($promocode->getId(), null, true);
+                    $dto = new PromocodeDto($name, $item, $type, $discount, $expireDateTime);
+                    $promocode = Promocode::create($dto);
+                    $this->promocodeRepository->save($promocode);
+
+                    $this->info($promocode->getId(), null, true);
+                }
             }
         }
     }
@@ -337,7 +347,8 @@ class Promocodes extends Base implements PromocodesInterface
         $text .= 'Количество переходов: '.$promocode->getTransitionsCount().PHP_EOL.PHP_EOL;
         $text .= 'Количество покупок: '.$promocode->getPurchasesCount().PHP_EOL.PHP_EOL;
         $text .= 'Скидка: '.$promocode->getDiscount().'%'.PHP_EOL.PHP_EOL;
-        $text .= 'Дата окончания: '.$promocode->getExpire()->format('d.m.Y').PHP_EOL;
+        $text .= 'Дата окончания: '.$promocode->getExpire()->format('d.m.Y').PHP_EOL.PHP_EOL;
+        $text .= 'Ссылка: https://t.me/onlineUniversityBot?start='.$promocode->getName();
 
         if (!empty($additional_text_to_header)) {
             $text = $additional_text_to_header.PHP_EOL.PHP_EOL.$text;
@@ -672,7 +683,7 @@ class Promocodes extends Base implements PromocodesInterface
             $this->sendMessage($text, $keyboard, true);
         } else {
 
-            if (preg_match_all('/^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.((?:19|20)\d{2})\s*$/', $expire) === 0) {
+            if (preg_match_all('/^\s*(3[01]|[12][0-9]|0?[1-9])\.(1[012]|0?[1-9])\.\d{4}\s*$/', $expire) === 0) {
                 $text = '⚠️ Дата должна соответствовать следующему формату: дд.мм.гггг';
                 $this->sendMessage($text, $keyboard, true);
             } else {
@@ -684,11 +695,16 @@ class Promocodes extends Base implements PromocodesInterface
                     die();
                 }
 
-                $promocode = $this->promocodeRepository->findById($id);
-                $promocode->setExpire($expireDateTime);
-                $this->promocodeRepository->save($promocode);
+                if ($expireDateTime < (new DateTime())) {
+                    $text = '⚠️ Дата окончания не может быть меньше текущей';
+                    $this->sendMessage($text, $keyboard, true);
+                } else {
+                    $promocode = $this->promocodeRepository->findById($id);
+                    $promocode->setExpire($expireDateTime);
+                    $this->promocodeRepository->save($promocode);
 
-                $this->info($id, '✅ Промокод успешно обновлен!', true);
+                    $this->info($id, '✅ Промокод успешно обновлен!', true);
+                }
             }
         }
     }

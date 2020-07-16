@@ -60,7 +60,7 @@ class Promocode
     private DateTimeInterface $expire;
 
     /**
-     * @ORM\OneToMany(targetEntity=PromocodeTransition::class, mappedBy="promocode")
+     * @ORM\OneToMany(targetEntity=PromocodeTransition::class, mappedBy="promocode", orphanRemoval=true)
      */
     private Collection $promocodeTransitions;
 

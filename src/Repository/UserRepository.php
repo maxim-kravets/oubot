@@ -74,10 +74,10 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
     public function getListForMailing(?Item $item = null, ?Promocode $promocode = null): Paginator
     {
         $query = $this->createQueryBuilder('u')
-            ->select('u', 'up', 'ui')
+            ->select('u', 'pt', 'ui')
             ->leftJoin('u.userItems', 'ui')
-            ->leftJoin('u.userPromocodes', 'up')
-//            ->where('u.administrator=1')
+            ->leftJoin('u.promocodeTransitions', 'pt')
+            ->where('u.administrator=0')
         ;
 
         if (!empty($item)) {
@@ -89,7 +89,7 @@ class UserRepository extends ServiceEntityRepository implements UserRepositoryIn
 
         if (!empty($promocode)) {
             $query
-                ->andWhere('up.promocode=:promocodeId')
+                ->andWhere('pt.promocode=:promocodeId')
                 ->setParameter('promocodeId', $promocode->getId())
             ;
         }

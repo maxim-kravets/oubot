@@ -147,7 +147,7 @@ class Mailing extends Base implements MailingInterface
 
         $keyboard
             ->row([
-                'text' => 'Удалить текст',
+                'text' => 'Заменить текст',
                 'callback_data' => json_encode([
                     'c' => self::COMMAND_MAILING_REMOVE_TEXT
                 ])
@@ -178,6 +178,19 @@ class Mailing extends Base implements MailingInterface
             }
 
             switch ($file_type) {
+                case BaseAbstract::FILE_TYPE_ANIMATION:
+                    try {
+                        $message = $this->api->sendAnimation([
+                            'chat_id' => $this->getChatId(),
+                            'animation' => $file_id,
+                            'caption' => $text,
+                            'reply_markup' => $keyboard
+                        ]);
+                    } catch (TelegramSDKException $e) {
+                        $this->logger->critical($e->getMessage());
+                        die();
+                    }
+                    break;
                 case BaseAbstract::FILE_TYPE_PHOTO:
                     try {
                         $message = $this->api->sendPhoto([
@@ -197,6 +210,7 @@ class Mailing extends Base implements MailingInterface
                             'chat_id' => $this->getChatId(),
                             'video' => $file_id,
                             'caption' => $text,
+                            'animation' => true,
                             'reply_markup' => $keyboard
                         ]);
                     } catch (TelegramSDKException $e) {
@@ -206,7 +220,7 @@ class Mailing extends Base implements MailingInterface
                     break;
                 case BaseAbstract::FILE_TYPE_DOCUMENT:
                     try {
-                        $message = $this->api->sendVideo([
+                        $message = $this->api->sendDocument([
                             'chat_id' => $this->getChatId(),
                             'document' => $file_id,
                             'caption' => $text,
@@ -343,7 +357,7 @@ class Mailing extends Base implements MailingInterface
                 ->row([
                     'text' => 'Назад',
                     'callback_data' => json_encode([
-                        'c' => self::COMMAND_MAIN_MENU
+                        'c' => self::COMMAND_MAILING_MENU
                     ])
                 ]);
             $this->sendMessage($text, $keyboard, true);
@@ -376,7 +390,7 @@ class Mailing extends Base implements MailingInterface
                     ->row([
                         'text' => 'Назад',
                         'callback_data' => json_encode([
-                            'c' => self::COMMAND_MAIN_MENU
+                            'c' => self::COMMAND_MAILING_MENU
                         ])
                     ]);
                 $this->sendMessage($text, $keyboard, true);
@@ -419,12 +433,12 @@ class Mailing extends Base implements MailingInterface
 
         $file_id = null;
         $file_type = null;
-        $correct_mime_types = ['image/gif', 'image/jpeg', 'image/png', 'video/mpeg', 'video/mp4', 'video/webm', 'video/x-flv'];
+        $correct_mime_types = ['video/mov', 'image/gif', 'image/jpg', 'image/jpeg', 'image/png', 'video/mpeg', 'video/mp4', 'video/webm', 'video/x-flv'];
 
+        $mime_type = null;
         $is_correct_mime_type = false;
         if (!empty($document)) {
             $file_id = $document->get('file_id');
-            $file_type = BaseAbstract::FILE_TYPE_DOCUMENT;
             $mime_type = $document->get('mime_type');
 
             if (in_array($mime_type, $correct_mime_types)) {
@@ -434,7 +448,6 @@ class Mailing extends Base implements MailingInterface
 
         if (!empty($video)) {
             $file_id = $video->get('file_id');
-            $file_type = BaseAbstract::FILE_TYPE_VIDEO;
             $mime_type = $video->get('mime_type');
 
             if (in_array($mime_type, $correct_mime_types)) {
@@ -443,9 +456,42 @@ class Mailing extends Base implements MailingInterface
         }
 
         if (!empty($photo)) {
-            $file_id = $photo->get('file_id');
-            $file_type = BaseAbstract::FILE_TYPE_PHOTO;
-            $is_correct_mime_type = true;
+            $file_id = $photo[0]['file_id'];
+            $mime_type = $photo->get('mime_type');
+
+            if (!empty($mime_type)) {
+                if (in_array($mime_type, $correct_mime_types)) {
+                    $is_correct_mime_type = true;
+                }
+            } else {
+                $is_correct_mime_type = true;
+            }
+        }
+
+        $this->logger->critical($mime_type);
+
+        try {
+            $file_path = $this->api->getFile(['file_id' => $file_id])->get('file_path');
+        } catch (TelegramSDKException $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+
+        $dir = substr($file_path, 0, stripos($file_path, '/'));
+
+        switch ($dir) {
+            case 'documents':
+                $file_type = BaseAbstract::FILE_TYPE_DOCUMENT;
+                break;
+            case 'videos':
+                $file_type = BaseAbstract::FILE_TYPE_VIDEO;
+                break;
+            case 'photos':
+                $file_type = BaseAbstract::FILE_TYPE_PHOTO;
+                break;
+            case 'animations':
+                $file_type = BaseAbstract::FILE_TYPE_ANIMATION;
+                break;
         }
 
         if (empty($file_id) && empty($file_type)) {
@@ -794,6 +840,19 @@ class Mailing extends Base implements MailingInterface
                 if (!empty($file_id) && !empty($file_type)) {
 
                     switch ($file_type) {
+                        case BaseAbstract::FILE_TYPE_ANIMATION:
+                            try {
+                                $this->api->sendAnimation([
+                                    'chat_id' => $this->getChatId(),
+                                    'animation' => $file_id,
+                                    'caption' => $text,
+                                    'reply_markup' => $keyboard
+                                ]);
+                            } catch (TelegramSDKException $e) {
+                                $this->logger->critical($e->getMessage());
+                                die();
+                            }
+                            break;
                         case BaseAbstract::FILE_TYPE_PHOTO:
                             try {
                                 $this->api->sendPhoto([
@@ -820,7 +879,7 @@ class Mailing extends Base implements MailingInterface
                             break;
                         case BaseAbstract::FILE_TYPE_DOCUMENT:
                             try {
-                                $this->api->sendVideo([
+                                $this->api->sendDocument([
                                     'chat_id' => $user->getChatId(),
                                     'document' => $file_id,
                                     'caption' => $text,

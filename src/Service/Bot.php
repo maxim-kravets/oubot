@@ -145,6 +145,9 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE_SKIP_CATEGORY:
                     $this->settingsSection->addCourseSkipCategory();
                     break;
+                case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE_SKIP_FILE:
+                    $this->settingsSection->addCourseSkipFile();
+                    break;
                 case BaseAbstract::COMMAND_SETTINGS_ADD_COURSE_SET_VISIBILITY:
                     $this->settingsSection->addCourseSetVisibility();
                     break;

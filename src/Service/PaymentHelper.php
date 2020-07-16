@@ -13,6 +13,7 @@ use App\Entity\Promocode;
 use App\Entity\User;
 use App\Entity\UserItem;
 use App\Entity\UserPromocode;
+use App\Repository\LastBotActionRepositoryInterface;
 use App\Repository\OrderRepositoryInterface;
 use App\Repository\PromocodeRepositoryInterface;
 use App\Repository\UserItemRepositoryInterface;
@@ -35,6 +36,7 @@ class PaymentHelper implements PaymentHelperInterface
     private UserItemRepositoryInterface $userItemRepository;
     private PromocodeRepositoryInterface $promocodeRepository;
     private UserPromocodeRepositoryInterface $userPromocodeRepository;
+    private LastBotActionRepositoryInterface $lastBotActionRepository;
 
     public function __construct(
         string $wayforpay_account,
@@ -45,7 +47,8 @@ class PaymentHelper implements PaymentHelperInterface
         LoggerInterface $logger,
         UserItemRepositoryInterface $userItemRepository,
         PromocodeRepositoryInterface $promocodeRepository,
-        UserPromocodeRepositoryInterface $userPromocodeRepository
+        UserPromocodeRepositoryInterface $userPromocodeRepository,
+        LastBotActionRepositoryInterface $lastBotActionRepository
     ) {
         $this->logger = $logger;
         $this->wayforpay_account = $wayforpay_account;
@@ -56,6 +59,7 @@ class PaymentHelper implements PaymentHelperInterface
         $this->userItemRepository = $userItemRepository;
         $this->promocodeRepository = $promocodeRepository;
         $this->userPromocodeRepository = $userPromocodeRepository;
+        $this->lastBotActionRepository = $lastBotActionRepository;
 
         try {
             $this->api = new Api($botConfiguration->getToken());
@@ -85,6 +89,7 @@ class PaymentHelper implements PaymentHelperInterface
             'orderReference' => $order->getId(),
             'orderDate' => time(),
             'serviceUrl' => 'https://'.$this->wayforpay_domain.'/payment/handle-response',
+            'returnUrl' => 'https://'.$this->wayforpay_domain.'/payment/user/'.$order->getUser()->getId().'/item/'.$order->getItem()->getId(),
             'amount' => $order->getAmount(),
             'currency' => 'UAH',
             'productName[]' => $order->getItem()->getName(),
@@ -146,15 +151,23 @@ class PaymentHelper implements PaymentHelperInterface
 
     public function handleResponse(string $payment_response): string
     {
+        $this->logger->critical($payment_response);
+
         $payment_response = json_decode($payment_response, true);
 
         $order = $this->orderRepository->findById($payment_response['orderReference']);
 
-        if ($order->getStatus() === Order::STATUS_REFUNDED) {
+        if ($order->getStatus() !== Order::STATUS_REFUNDED) {
             $order->setRawResponse($payment_response);
 
             $keyboard = (new Keyboard())
                 ->inline()
+                ->row([
+                    'text' => '👤 Кабинет',
+                    'callback_data' => json_encode([
+                        'c' => BaseAbstract::COMMAND_CABINET
+                    ])
+                ])
                 ->row([
                     'text' => 'Закрыть',
                     'callback_data' => json_encode([
@@ -195,11 +208,27 @@ class PaymentHelper implements PaymentHelperInterface
                 $is_order_status_changed = true;
             } elseif ($payment_response['transactionStatus'] === 'Expired' && $order->getStatus() !== Order::STATUS_EXPIRED) {
                 $order->setStatus(Order::STATUS_EXPIRED);
+            } elseif($payment_response['transactionStatus'] === 'Pending' && $order->getStatus() !== Order::STATUS_ANTIFRAUD_VERIFICATION) {
+                $text = '⚠️ Транзакция находится в обработке, в ближайшее время вы получите уведомление о статусе транзакции';
+                $order->setStatus(Order::STATUS_ANTIFRAUD_VERIFICATION);
             }
 
+            $lastBotAction = $this->lastBotActionRepository->findByChatId($order->getUser()->getChatId());
+
             if ($is_order_status_changed) {
+
                 try {
-                    $this->api->sendMessage([
+                    $this->api->deleteMessage([
+                        'chat_id' => $order->getUser()->getChatId(),
+                        'message_id' => $lastBotAction->getMessageId()
+                    ]);
+                } catch (TelegramSDKException $e) {
+                    $this->logger->critical($e->getMessage());
+                    die();
+                }
+
+                try {
+                    $message = $this->api->sendMessage([
                         'chat_id' => $order->getUser()->getChatId(),
                         'text' => $text,
                         'reply_markup' => $keyboard
@@ -208,6 +237,9 @@ class PaymentHelper implements PaymentHelperInterface
                     $this->logger->critical($e->getMessage());
                     die();
                 }
+
+                $lastBotAction->setMessageId($message->messageId);
+                $this->lastBotActionRepository->save($lastBotAction);
             }
 
             $this->orderRepository->save($order);

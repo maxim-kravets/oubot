@@ -305,7 +305,7 @@ class Courses extends Base implements CoursesInterface
                     ]);
             }
 
-            if ($this->userItemRepository->isUserHasItem($this->getUser(), $item)) {
+            if ($this->userItemRepository->isUserHasItem($this->getUser(), $item) || $this->getUser()->isAdministrator()) {
                 $back_cmd = [
                     'c' => self::COMMAND_COURSES,
                     'p' => $page
@@ -407,6 +407,18 @@ class Courses extends Base implements CoursesInterface
                     ]);
                 } catch (TelegramSDKException $e) {
                     $this->logger->critical($e->getMessage());
+                    die();
+                }
+                break;
+            case null:
+                try {
+                    $message = $this->api->sendMessage([
+                        'chat_id' => $this->getChatId(),
+                        'text' => $text,
+                        'reply_markup' => $keyboard
+                    ]);
+                } catch (TelegramSDKException $e) {
+                    $this->logger->critical($e);
                     die();
                 }
                 break;

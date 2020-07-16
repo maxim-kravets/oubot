@@ -11,8 +11,8 @@ class Item
     private string $name;
     private ?Category $category;
     private string $text;
-    private string $file_id;
-    private int $file_type;
+    private ?string $file_id;
+    private ?int $file_type;
     private int $price;
     private string $about_url;
     private bool $visible;
@@ -21,8 +21,8 @@ class Item
         string $name,
         ?Category $category,
         string $text,
-        string $file_id,
-        int $file_type,
+        ?string $file_id,
+        ?int $file_type,
         int $price,
         string $about_url,
         bool $visible
@@ -53,12 +53,12 @@ class Item
         return $this->text;
     }
 
-    public function getFileId(): string
+    public function getFileId(): ?string
     {
         return $this->file_id;
     }
 
-    public function getFileType(): int
+    public function getFileType(): ?int
     {
         return $this->file_type;
     }

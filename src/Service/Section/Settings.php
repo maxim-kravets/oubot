@@ -420,6 +420,12 @@ class Settings extends Base implements SettingsInterface
         $keyboard = (new Keyboard())
             ->inline()
             ->row([
+                'text' => 'Пропустить',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SETTINGS_ADD_COURSE_SKIP_FILE
+                ])
+            ])
+            ->row([
                 'text' => 'Назад',
                 'callback_data' => $callback_data
             ]);
@@ -427,12 +433,34 @@ class Settings extends Base implements SettingsInterface
         $this->sendMessage($text, $keyboard, $delete_user_answer);
     }
 
+    function addCourseSkipFile(): void
+    {
+        $this->getLastBotQuestion()
+            ->addAnswer('file_id', null)
+            ->addAnswer('file_type', null)
+            ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_PRICE)
+        ;
+        $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+        $text = '💬 Введите стоимость:';
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => 'Назад',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
+                    'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT
+                ])
+            ]);
+
+        $this->sendMessage($text, $keyboard);
+    }
+
     function handleUserAnswerOnAddCourseFile(): void
     {
         $delete_user_answer = true;
         if ($this->isBackToPreviousQuestionCmd()) {
-            $file_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_id'];
-            $file_type = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_type'];
+            $file_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_id'] ?? null;
+            $file_type = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_type'] ?? null;
             $delete_user_answer = false;
         } else {
             $document = $this->getWebhookUpdate()->getMessage()->get('document');
@@ -535,35 +563,63 @@ class Settings extends Base implements SettingsInterface
 
     function handleUserAnswerOnAddCourseAboutUrl(): void
     {
-        $this->getLastBotQuestion()
-            ->addAnswer('about_url', $this->getText())
-            ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_VISIBLE)
-        ;
-        $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+        $url = $this->getText();
 
-        $text = '💬 Выберите видимость курса:';
-        $keyboard = (new Keyboard())
-            ->inline()
-            ->row([
-                'text' => 'Видимый',
-                'callback_data' => json_encode([
-                    'c' => self::COMMAND_SETTINGS_ADD_COURSE_SET_VISIBILITY,
-                    'v' => true
-                ])
-            ], [
-                'text' => 'Невидимый',
-                'callback_data' => json_encode([
-                    'c' => self::COMMAND_SETTINGS_ADD_COURSE_SET_VISIBILITY,
-                    'v' => false
-                ])
-            ])
-            ->row([
-                'text' => 'Назад',
-                'callback_data' => json_encode([
-                    'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
-                    'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT
-                ])
-            ]);
+        if (empty($url)) {
+            $text = '⚠️ Вы прислали что-то не то, пришлите ссылку:';
+            $keyboard = (new Keyboard())
+                ->inline()
+                ->row([
+                    'text' => 'Назад',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
+                        'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_FILE
+                    ])
+                ]);
+        } else {
+
+            if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+                $text = '⚠️ Пришлите ссылке в формате http://example1.com:';
+                $keyboard = (new Keyboard())
+                    ->inline()
+                    ->row([
+                        'text' => 'Назад',
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
+                            'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_FILE
+                        ])
+                    ]);
+            } else {
+                $this->getLastBotQuestion()
+                    ->addAnswer('about_url', $url)
+                    ->setType(LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_VISIBLE);
+                $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
+
+                $text = '💬 Выберите видимость курса:';
+                $keyboard = (new Keyboard())
+                    ->inline()
+                    ->row([
+                        'text' => 'Видимый',
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SET_VISIBILITY,
+                            'v' => true
+                        ])
+                    ], [
+                        'text' => 'Невидимый',
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_SETTINGS_ADD_COURSE_SET_VISIBILITY,
+                            'v' => false
+                        ])
+                    ])
+                    ->row([
+                        'text' => 'Назад',
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
+                            'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT
+                        ])
+                    ]);
+            }
+        }
 
         $this->sendMessage($text, $keyboard, true);
     }
@@ -574,8 +630,8 @@ class Settings extends Base implements SettingsInterface
         $category_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['category_id'] ?? null;
         $category_name = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['category_name'] ?? null;
         $text = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['text'];
-        $file_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_id'];
-        $file_type = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_type'];
+        $file_id = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_id'] ?? null;
+        $file_type = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['file_type'] ?? null;
         $price = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['price'];
         $about_url = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['about_url'];
         $visible = json_decode($this->getWebhookUpdate()->get('callback_query')->get('data'))->v;

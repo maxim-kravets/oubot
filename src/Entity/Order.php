@@ -20,6 +20,7 @@ class Order
     const STATUS_REFUNDED = 3;
     const STATUS_EXPIRED = 5;
     const STATUS_FULL_PRICE_DISCOUNT = 4;
+    const STATUS_ANTIFRAUD_VERIFICATION = 6;
 
     /**
      * @ORM\Id()

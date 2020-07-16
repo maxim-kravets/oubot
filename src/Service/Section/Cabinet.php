@@ -5,6 +5,7 @@ namespace App\Service\Section;
 
 
 use App\Entity\UserItem;
+use Telegram\Bot\Exceptions\TelegramSDKException;
 use Telegram\Bot\Keyboard\Keyboard;
 
 class Cabinet extends Base implements CabinetInterface

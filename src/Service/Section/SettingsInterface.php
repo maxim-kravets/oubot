@@ -11,6 +11,7 @@ interface SettingsInterface
     function addCourseCategories(bool $delete_user_answer = false): void;
     function addCourseSelectCategory();
     function addCourseSkipCategory(): void;
+    function addCourseSkipFile(): void;
     function handleUserAnswerOnAddCourseName(): void;
     function handleUserAnswerOnAddCourseCategory(): void;
     function handleUserAnswerOnAddCourseText(): void;
