@@ -75,9 +75,9 @@ class Item
     private Collection $orders;
 
     /**
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="integer")
      */
-    private float $price;
+    private int $price;
 
     public function __construct()
     {
@@ -268,12 +268,12 @@ class Item
         return $this;
     }
 
-    public function getPrice(): ?float
+    public function getPrice(): ?int
     {
         return $this->price;
     }
 
-    public function setPrice(float $price): self
+    public function setPrice(int $price): self
     {
         $this->price = $price;
 

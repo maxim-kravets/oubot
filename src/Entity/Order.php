@@ -42,9 +42,9 @@ class Order
     private Item $item;
 
     /**
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="integer")
      */
-    private float $amount;
+    private int $amount;
 
     /**
      * @ORM\ManyToOne(targetEntity=Promocode::class, inversedBy="orders")
@@ -95,12 +95,12 @@ class Order
         return $this;
     }
 
-    public function getAmount(): float
+    public function getAmount(): int
     {
         return $this->amount;
     }
 
-    public function setAmount(float $amount): self
+    public function setAmount(int $amount): self
     {
         $this->amount = $amount;
 

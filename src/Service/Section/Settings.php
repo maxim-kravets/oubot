@@ -486,7 +486,7 @@ class Settings extends Base implements SettingsInterface
             }
         }
 
-        if (empty($file_id) && empty($file_type)) {
+        if (empty($file_id) && empty($file_type) && !$this->isBackToPreviousQuestionCmd()) {
             $text = '⚠️ Вы прислали что-то не то, пришлите файл:';
             $keyboard = (new Keyboard())
                 ->inline()
@@ -615,7 +615,7 @@ class Settings extends Base implements SettingsInterface
                         'text' => 'Назад',
                         'callback_data' => json_encode([
                             'c' => self::COMMAND_BACK_TO_PREVIOUS_QUESTION,
-                            'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_TEXT
+                            'qt' => LastBotQuestion::TYPE_SETTINGS_ADD_COURSE_PRICE
                         ])
                     ]);
             }

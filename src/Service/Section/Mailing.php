@@ -395,8 +395,7 @@ class Mailing extends Base implements MailingInterface
                     ]);
                 $this->sendMessage($text, $keyboard, true);
             } else {
-                $previous_buttons = $this->getLastBotQuestion()->getAnswersFromPreviousQuestions()['buttons'] ?? [];
-                $this->getLastBotQuestion()->addAnswer('buttons', array_merge($previous_buttons, $buttons));
+                $this->getLastBotQuestion()->addAnswer('buttons', $buttons);
                 $this->lastBotQuestionRepository->save($this->getLastBotQuestion());
                 $this->menu(true);
             }
@@ -807,7 +806,7 @@ class Mailing extends Base implements MailingInterface
 
                 $keyboard
                     ->row([
-                        'text' => $item->getName(),
+                        'text' => '✅ '.$item->getName(),
                         'url' => $item->getAboutUrl()
                     ]);
             }
@@ -843,14 +842,14 @@ class Mailing extends Base implements MailingInterface
                         case BaseAbstract::FILE_TYPE_ANIMATION:
                             try {
                                 $this->api->sendAnimation([
-                                    'chat_id' => $this->getChatId(),
+                                    'chat_id' => $user->getChatId(),
                                     'animation' => $file_id,
                                     'caption' => $text,
                                     'reply_markup' => $keyboard
                                 ]);
                             } catch (TelegramSDKException $e) {
                                 $this->logger->critical($e->getMessage());
-                                die();
+                                continue;
                             }
                             break;
                         case BaseAbstract::FILE_TYPE_PHOTO:
@@ -863,6 +862,7 @@ class Mailing extends Base implements MailingInterface
                                 ]);
                             } catch (TelegramSDKException $e) {
                                 $this->logger->critical($e->getMessage());
+                                continue;
                             }
                             break;
                         case BaseAbstract::FILE_TYPE_VIDEO:
@@ -875,6 +875,7 @@ class Mailing extends Base implements MailingInterface
                                 ]);
                             } catch (TelegramSDKException $e) {
                                 $this->logger->critical($e->getMessage());
+                                continue;
                             }
                             break;
                         case BaseAbstract::FILE_TYPE_DOCUMENT:
@@ -887,6 +888,7 @@ class Mailing extends Base implements MailingInterface
                                 ]);
                             } catch (TelegramSDKException $e) {
                                 $this->logger->critical($e->getMessage());
+                                continue;
                             }
                             break;
                     }
@@ -900,6 +902,7 @@ class Mailing extends Base implements MailingInterface
                         ]);
                     } catch (TelegramSDKException $e) {
                         $this->logger->critical($e->getMessage());
+                        continue;
                     }
                 }
 

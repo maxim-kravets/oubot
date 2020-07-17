@@ -86,7 +86,7 @@ class PaymentHelper implements PaymentHelperInterface
             'orderReference' => $order->getId(),
             'orderDate' => time(),
             'serviceUrl' => 'https://'.$this->wayforpay_domain.'/payment/handle-response',
-            'returnUrl' => 'https://'.$this->wayforpay_domain.'/payment/user/'.$order->getUser()->getId().'/item/'.$order->getItem()->getId(),
+            'returnUrl' => 'https://t.me/onlineUniversityBot',
             'amount' => $order->getAmount(),
             'currency' => 'UAH',
             'productName[]' => $order->getItem()->getName(),
@@ -103,7 +103,7 @@ class PaymentHelper implements PaymentHelperInterface
 
     public function activatePromocode(Order $order, Promocode $promocode): array
     {
-        $new_price = $order->getAmount() - (($order->getAmount() * $promocode->getDiscount()) / 100);
+        $new_price = round($order->getAmount() - (($order->getAmount() * $promocode->getDiscount()) / 100));
 
         if ($new_price == 0) {
             $new_price = 0;
@@ -133,6 +133,10 @@ class PaymentHelper implements PaymentHelperInterface
             } catch (TelegramSDKException $e) {
                 $this->logger->critical($e->getMessage());
                 die();
+            }
+
+            if ($promocode->getType() === Promocode::TYPE_ONE_TIME) {
+                $this->promocodeRepository->remove($promocode);
             }
 
         } elseif ($new_price < 1) {
@@ -193,12 +197,18 @@ class PaymentHelper implements PaymentHelperInterface
                 $promocode = $order->getPromocode();
 
                 if (!empty($promocode)) {
-                    $dto = new UserPromocodeDto($order->getUser(), $promocode);
-                    $userPromocode = UserPromocode::create($dto);
-                    $this->userPromocodeRepository->save($userPromocode);
 
-                    $promocode->increasePurchaseCount();
-                    $this->promocodeRepository->save($promocode);
+                    if ($promocode->getType() === Promocode::TYPE_REF) {
+                        $dto = new UserPromocodeDto($order->getUser(), $promocode);
+                        $userPromocode = UserPromocode::create($dto);
+                        $this->userPromocodeRepository->save($userPromocode);
+
+                        $promocode->increasePurchaseCount();
+                        $this->promocodeRepository->save($promocode);
+                    } else {
+                        $this->promocodeRepository->remove($promocode);
+                    }
+
                 }
 
                 $text = '✅ Курс успешно куплен!';

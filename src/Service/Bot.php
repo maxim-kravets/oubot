@@ -175,6 +175,9 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_SUPPORT_ADMIN_QUESTION:
                     $this->supportSection->question();
                     break;
+                case BaseAbstract::COMMAND_SUPPORT_ADMIN_TOGGLE_SUPPORT_NOTIFICATION_FLAG:
+                    $this->supportSection->toggleSupportNotificationFlag();
+                    break;
                 case BaseAbstract::COMMAND_PROMOCODES_CREATE:
                     $this->promocodesSection->create();
                     break;

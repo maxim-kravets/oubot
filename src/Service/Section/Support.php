@@ -60,6 +60,24 @@ class Support extends Base implements SupportInterface
                         ]);
                 }
 
+                if ($this->getUser()->getAdminSupportNotification() === User::ADMIN_SUPPORT_NOTIFICATIONS_ON) {
+                    $keyboard
+                        ->row([
+                            'text' => '⏹ Выключить уведомления',
+                            'callback_data' => json_encode([
+                                'c' => self::COMMAND_SUPPORT_ADMIN_TOGGLE_SUPPORT_NOTIFICATION_FLAG
+                            ])
+                        ]);
+                } else {
+                    $keyboard
+                        ->row([
+                            'text' => '▶️ Включить уведомления',
+                            'callback_data' => json_encode([
+                                'c' => self::COMMAND_SUPPORT_ADMIN_TOGGLE_SUPPORT_NOTIFICATION_FLAG
+                            ])
+                        ]);
+                }
+
                 $keyboard
                     ->row([
                         'text' => 'Закрыть',
@@ -91,6 +109,17 @@ class Support extends Base implements SupportInterface
         }
 
         $this->sendMessage($text, $keyboard, $delete_user_answer);
+    }
+
+    function toggleSupportNotificationFlag(): void
+    {
+        if ($this->getUser()->getAdminSupportNotification() === User::ADMIN_SUPPORT_NOTIFICATIONS_ON) {
+            $this->getUser()->setAdminSupportNotification(User::ADMIN_SUPPORT_NOTIFICATIONS_OFF);
+        } else {
+            $this->getUser()->setAdminSupportNotification(User::ADMIN_SUPPORT_NOTIFICATIONS_ON);
+        }
+        $this->userRepository->save($this->getUser());
+        $this->start();
     }
 
     function question(): void
@@ -141,6 +170,8 @@ class Support extends Base implements SupportInterface
             $this->sendMessage($text, $keyboard, true);
         } else {
             $support = $this->supportRepository->findById($id);
+
+            $text = '📲 Служба поддержки:'.PHP_EOL.PHP_EOL.$text;
 
             $support
                 ->setAnswer($text)
@@ -206,6 +237,11 @@ class Support extends Base implements SupportInterface
              * @var User $admin
              */
             foreach ($admins as $admin) {
+
+                if ($admin->getAdminSupportNotification() === User::ADMIN_SUPPORT_NOTIFICATIONS_OFF) {
+                    continue;
+                }
+
                 $text = '💬 '.$this->getUser()->getName().' - отправил сообщение в тех поддержку и ожидает ответа';
                 $keyboard = (new Keyboard())
                     ->inline()

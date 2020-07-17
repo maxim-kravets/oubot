@@ -14,6 +14,9 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class User
 {
+    const ADMIN_SUPPORT_NOTIFICATIONS_OFF = 0;
+    const ADMIN_SUPPORT_NOTIFICATIONS_ON = 1;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -65,6 +68,11 @@ class User
      * @ORM\OneToMany(targetEntity=UserPromocode::class, mappedBy="user")
      */
     private Collection $userPromocodes;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private int $adminSupportNotification = self::ADMIN_SUPPORT_NOTIFICATIONS_ON;
 
     public function __construct()
     {
@@ -289,6 +297,18 @@ class User
                 $userPromocode->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getAdminSupportNotification(): ?int
+    {
+        return $this->adminSupportNotification;
+    }
+
+    public function setAdminSupportNotification(int $adminSupportNotification): self
+    {
+        $this->adminSupportNotification = $adminSupportNotification;
 
         return $this;
     }
