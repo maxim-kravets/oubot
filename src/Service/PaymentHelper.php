@@ -80,9 +80,6 @@ class PaymentHelper implements PaymentHelperInterface
 
     public function getFormData(Order $order): array
     {
-        $string = $this->wayforpay_account.';'.$this->wayforpay_domain.';'.$order->getId().';'.time().';'.$order->getAmount().';UAH;'.$order->getItem()->getName().';1;'.$order->getAmount();
-        $signature = hash_hmac('md5', $string, $this->wayforpay_secret);
-
         return [
             'merchantAccount' => $this->wayforpay_account,
             'merchantDomainName' => $this->wayforpay_domain,
@@ -95,7 +92,7 @@ class PaymentHelper implements PaymentHelperInterface
             'productName[]' => $order->getItem()->getName(),
             'productCount[]' => 1,
             'productPrice[]' => $order->getAmount(),
-            'merchantSignature' => $signature
+            'merchantSignature' => $this->createSignature($order)
         ];
     }
 
@@ -104,7 +101,7 @@ class PaymentHelper implements PaymentHelperInterface
         return 'https://'.$this->wayforpay_domain.'/payment/user/'.$user->getId().'/item/'.$item->getId();
     }
 
-    public function activatePromocode(Order $order, Promocode $promocode): float
+    public function activatePromocode(Order $order, Promocode $promocode): array
     {
         $new_price = $order->getAmount() - (($order->getAmount() * $promocode->getDiscount()) / 100);
 
@@ -146,7 +143,12 @@ class PaymentHelper implements PaymentHelperInterface
         $order->setPromocode($promocode);
         $this->orderRepository->save($order);
 
-        return $new_price;
+        $new_signature = $this->createSignature($order);
+
+        return [
+            'new_price' => $new_price,
+            'new_signature' => $new_signature
+        ];
     }
 
     public function handleResponse(string $payment_response): string
@@ -209,6 +211,10 @@ class PaymentHelper implements PaymentHelperInterface
                 $userItem = $this->userItemRepository->getUserItem($order->getUser(), $order->getItem());
                 $this->userItemRepository->remove($userItem);
                 $order->setStatus(Order::STATUS_REFUNDED);
+
+                $order->getPromocode()->decreasePurchaseCount();
+                $this->promocodeRepository->save($order->getPromocode());
+
                 $is_order_status_changed = true;
             } elseif ($payment_response['transactionStatus'] === 'Expired' && $order->getStatus() !== Order::STATUS_EXPIRED) {
                 $order->setStatus(Order::STATUS_EXPIRED);
@@ -258,6 +264,13 @@ class PaymentHelper implements PaymentHelperInterface
             'time' => time(),
             'signature' => $signature
         ]);
+    }
+
+    private function createSignature(Order $order): string
+    {
+        $string = $this->wayforpay_account.';'.$this->wayforpay_domain.';'.$order->getId().';'.$order->getDate()->getTimestamp().';'.$order->getAmount().';UAH;'.$order->getItem()->getName().';1;'.$order->getAmount();
+
+        return hash_hmac('md5', $string, $this->wayforpay_secret);
     }
 
 }

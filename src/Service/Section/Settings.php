@@ -773,8 +773,15 @@ class Settings extends Base implements SettingsInterface
 
             $this->sendMessage($text, $keyboard, true);
         } else {
-            $dto = new UserDto($name, $chat_id, true);
-            $user = User::create($dto);
+
+            $user = $this->userRepository->findByChatId($chat_id);
+            if (!empty($user)) {
+                $user->setAdministrator(true);
+            } else {
+                $dto = new UserDto($name, $chat_id, true);
+                $user = User::create($dto);
+            }
+
             $this->userRepository->save($user);
 
             $this->deleteMessage($this->getMessageId());
@@ -811,10 +818,63 @@ class Settings extends Base implements SettingsInterface
         $id = json_decode($this->getWebhookUpdate()->callbackQuery->get('data'))->id;
 
         $admin = $this->userRepository->findById($id);
+        $admin->setAdministrator(false);
+        $this->userRepository->save($admin);
 
-        $this->userRepository->remove($admin);
+        if ($this->getUser()->getId() === $admin->getId()) {
+            $this->mainMenu();
+        } else {
+            $this->start('✅ Администратор с именем "' . $admin->getName() . '" успешно удален!');
+        }
+    }
 
-        $this->start('✅ Администратор с именем "'.$admin->getName().'" успешно удален!');
+    private function mainMenu(): void
+    {
+        $this->clearLastBotQuestion();
+
+        $text = '✅ Вы успешно удалены из списка администраторов!'.PHP_EOL.PHP_EOL.'Выберите раздел:';
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => '👤 Кабинет',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_CABINET
+                ])
+            ], [
+                'text' => '🎓 Все курсы',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_COURSES
+                ])
+            ])
+            ->row([
+                'text' => '📲 Служба поддержки',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_SUPPORT
+                ])
+            ]);
+
+        if ($this->getUser()->isAdministrator()) {
+            $keyboard
+                ->row([
+                    'text' => '✉️ Рассылка',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_MAILING
+                    ])
+                ], [
+                    'text' => '🚀 Промокоды',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_PROMOCODES
+                    ])
+                ])
+                ->row([
+                    'text' => '⚙️ Настройки',
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_SETTINGS
+                    ])
+                ]);
+        }
+
+        $this->sendMessage($text, $keyboard);
     }
 
 }

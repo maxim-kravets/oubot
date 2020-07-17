@@ -211,7 +211,6 @@ class Base extends BaseAbstract implements BaseInterface
             ]);
         } catch (TelegramSDKException $e) {
             $this->logger->critical($e->getMessage());
-            die();
         }
     }
 
@@ -252,11 +251,12 @@ class Base extends BaseAbstract implements BaseInterface
             $message = $this->api->sendMessage($params);
         } catch (TelegramSDKException $e) {
             $this->getLogger()->critical($e->getMessage());
-            die();
         }
 
-        $this->getLastBotAction()->setMessageId($message->messageId);
-        $this->lastBotActionRepository->save($this->getLastBotAction());
+        if (isset($message)) {
+            $this->getLastBotAction()->setMessageId($message->messageId);
+            $this->lastBotActionRepository->save($this->getLastBotAction());
+        }
     }
 
     function getLogger(): LoggerInterface

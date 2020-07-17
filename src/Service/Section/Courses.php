@@ -221,9 +221,16 @@ class Courses extends Base implements CoursesInterface
         $this->sendMessage($text, $keyboard);
     }
 
-    function courses(?int $category_id = null): void
+    function courses(?int $category_id = null, ?string $additional_text_to_header = null, ?int $page = null): void
     {
-        $page = $this->getCallbackData()->p ?? 1;
+        if (empty($page)) {
+            $page = $this->getCallbackData()->p ?? 1;
+        }
+
+        if (empty($category_id)) {
+            $category_id = $this->getCallbackData()->cid ?? null;
+        }
+
         $back_cmd = $this->getCallbackData()->bc ?? null;
 
         if (!empty($back_cmd)) {
@@ -257,7 +264,12 @@ class Courses extends Base implements CoursesInterface
             ];
         }
 
-        $items = $this->itemRepository->getList($page, 1, $category_id);
+        $only_visible = true;
+        if ($this->getUser()->isAdministrator()) {
+            $only_visible = false;
+        }
+
+        $items = $this->itemRepository->getList($page, 1, $category_id, $only_visible);
         $pages = $items->count();
 
         if ($items->getIterator()->count() > 0) {
@@ -266,7 +278,11 @@ class Courses extends Base implements CoursesInterface
              */
             $item = $items->getIterator()[0];
 
-            $text = '['.$item->getName().']('.$item->getAboutUrl().')';
+            $text = '<a href="'.$item->getAboutUrl().'">'.$item->getName().'</a>';
+
+            if (!empty($additional_text_to_header)) {
+                $text = $additional_text_to_header.PHP_EOL.PHP_EOL.$text;
+            }
 
             $keyboard = (new Keyboard())->inline();
 
@@ -336,13 +352,67 @@ class Courses extends Base implements CoursesInterface
                     'url' => $item->getAboutUrl()
                 ]);
 
+            if ($this->getUser()->isAdministrator()) {
+
+                $second_cell = [
+                    'callback_data' => json_encode([
+                        'c' => self::COMMAND_COURSES_CHANGE_VISIBILITY,
+                        'id' => $item->getId(),
+                        'p' => $page
+                    ])
+                ];
+
+                if ($item->getVisible()) {
+                    $second_cell['text'] = '👀 Видимый';
+                } else {
+                    $second_cell['text'] = '📦 Невидимый';
+                }
+
+                $keyboard
+                    ->row([
+                        'text' => '🗑 Удалить',
+                        'callback_data' => json_encode([
+                            'c' => self::COMMAND_COURSES_REMOVE,
+                            'id' => $item->getId(),
+                            'p' => $page
+                        ])
+                    ], $second_cell);
+            }
+
             $keyboard->row($back_btn);
         } else {
             $text = '⚠️ Курсов нет';
+
+            if (!empty($additional_text_to_header)) {
+                $text = $additional_text_to_header.PHP_EOL.PHP_EOL.$text;
+            }
+
             $keyboard = (new Keyboard())->inline()->row($back_btn);
         }
 
-        $this->sendMessage($text, $keyboard, false, 'MarkdownV2');
+        $this->sendMessage($text, $keyboard, false, 'HTML');
+    }
+
+    function changeVisibility(): void
+    {
+        $id = $this->getCallbackData()->id;
+        $page = $this->getCallbackData()->p;
+
+        $item = $this->itemRepository->findById($id);
+
+        if ($item->getVisible()) {
+            $item->setVisible(false);
+        } else {
+            $item->setVisible(true);
+        }
+
+        $category_id = null;
+        if (!empty($item->getCategory())) {
+            $category_id = $item->getCategory()->getId();
+        }
+
+        $this->itemRepository->save($item);
+        $this->courses($category_id, null, $page);
     }
 
     function download(): void
@@ -430,5 +500,59 @@ class Courses extends Base implements CoursesInterface
         $this->getLastBotAction()->setMessageId($message->messageId);
         $this->lastBotActionRepository->save($this->getLastBotAction());
 
+    }
+
+    public function removeCourse(): void
+    {
+        $id = $this->getCallbackData()->id;
+        $page = $this->getCallbackData()->p ?? 1;
+
+        $item = $this->itemRepository->findById($id);
+
+        $category_id = null;
+        if (!empty($item->getCategory())) {
+            $category_id = $item->getCategory()->getId();
+        }
+
+        $text = 'Вы точно хотите удалить "'.$item->getName().'"?';
+        $keyboard = (new Keyboard())
+            ->inline()
+            ->row([
+                'text' => 'Да',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_COURSES_REMOVE_CONFIRM,
+                    'id' => $id
+                ])
+            ], [
+                'text' => 'Нет',
+                'callback_data' => json_encode([
+                    'c' => self::COMMAND_COURSES,
+                    'cid' => $category_id,
+                    'p' => $page
+                ])
+            ]);
+
+        $this->sendMessage($text, $keyboard);
+    }
+
+    public function removeCourseConfirm(): void
+    {
+        $id = $this->getCallbackData()->id;
+
+        $item = $this->itemRepository->findById($id);
+
+        $category_id = null;
+        if (!empty($item)) {
+            $category = $item->getCategory();
+
+            if (!empty($category)) {
+                $category_id = $category->getId();
+            }
+            $this->itemRepository->remove($item);
+
+            $this->courses($category_id, '✅ Курс "'.$item->getName().'" успешно удален!');
+        } else {
+            $this->courses();
+        }
     }
 }

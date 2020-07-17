@@ -13,8 +13,13 @@ $(function() {
             data: {order_id: order_id, promocode_name: promocode_name},
             success: function (data) {
                 if (data['activated']) {
+
+                    console.log(data['new_signature']);
+
                     $('#price').text(data['new_price'] + 'UAH');
-                    $('#productPrice').val(data['new_price']);
+                    $('#amount').attr('value', data['new_price']);
+                    $('#productPrice').attr('value', data['new_price']);
+                    $('#merchantSignature').attr('value', data['new_signature']);
                     $('#promocode-section').hide();
 
                     if (data['new_price'] === 0) {

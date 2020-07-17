@@ -15,5 +15,5 @@ interface PaymentHelperInterface
     public function getFormData(Order $order): array;
     public function handleResponse(string $payment_response): string;
     public function getBuyUrl(User $user, Item $item): string;
-    public function activatePromocode(Order $order, Promocode $promocode): float;
+    public function activatePromocode(Order $order, Promocode $promocode): array;
 }

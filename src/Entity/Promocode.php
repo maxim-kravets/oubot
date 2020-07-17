@@ -65,12 +65,12 @@ class Promocode
     private Collection $promocodeTransitions;
 
     /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="promocode")
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="promocode", orphanRemoval=true)
      */
     private Collection $orders;
 
     /**
-     * @ORM\OneToMany(targetEntity=UserPromocode::class, mappedBy="promocode")
+     * @ORM\OneToMany(targetEntity=UserPromocode::class, mappedBy="promocode", orphanRemoval=true)
      */
     private Collection $userPromocodes;
 
@@ -136,9 +136,16 @@ class Promocode
 
     function increasePurchaseCount(): self
     {
-        $this->purchasesCount = $this->purchasesCount + 1;
+        ++$this->purchasesCount;
 
-        return  $this;
+        return $this;
+    }
+
+    function decreasePurchaseCount(): self
+    {
+        --$this->purchasesCount;
+
+        return $this;
     }
 
     public function getTransitionsCount(): ?int

@@ -128,12 +128,13 @@ class PaymentController extends AbstractController
                 ]);
             }
 
-            $new_price = $this->paymentHelper->activatePromocode($order, $promocode);
+            $data = $this->paymentHelper->activatePromocode($order, $promocode);
 
             return new JsonResponse([
                 'activated' => true,
                 'reason' => 'Промокод успешно активирован',
-                'new_price' => $new_price
+                'new_price' => $data['new_price'],
+                'new_signature' => $data['new_signature']
             ]);
         }
 

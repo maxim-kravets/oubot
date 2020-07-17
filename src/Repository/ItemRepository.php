@@ -38,15 +38,20 @@ class ItemRepository extends ServiceEntityRepository implements ItemRepositoryIn
         return $this->findOneBy(['name' => $name]);
     }
 
-    function getList(int $page, int $limit = 5, ?int $category_id = null): Paginator
+    function getList(int $page, int $limit = 5, ?int $category_id = null, bool $only_visible = true): Paginator
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('i')
             ->from('App\Entity\Item', 'i')
-            ->where('i.visible=:visible')
-            ->setParameter('visible', true)
         ;
+
+        if ($only_visible) {
+            $query = $query
+                ->where('i.visible=:visible')
+                ->setParameter('visible', true)
+            ;
+        }
 
         if (!empty($category_id)) {
             $query = $query
@@ -69,6 +74,17 @@ class ItemRepository extends ServiceEntityRepository implements ItemRepositoryIn
     {
         try {
             $this->em->persist($entity);
+            $this->em->flush();
+        } catch (ORMException $e) {
+            $this->logger->critical($e->getMessage());
+            die();
+        }
+    }
+
+    public function remove(Item $entity): void
+    {
+        try {
+            $this->em->remove($entity);
             $this->em->flush();
         } catch (ORMException $e) {
             $this->logger->critical($e->getMessage());

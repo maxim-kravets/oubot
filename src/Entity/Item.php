@@ -60,24 +60,24 @@ class Item
     private bool $visible;
 
     /**
-     * @ORM\OneToOne(targetEntity=Promocode::class, mappedBy="item", cascade={"persist", "remove"})
+     * @ORM\OneToOne(targetEntity=Promocode::class, mappedBy="item", orphanRemoval=true)
      */
     private ?Promocode $promocode;
 
     /**
-     * @ORM\OneToMany(targetEntity=UserItem::class, mappedBy="item")
+     * @ORM\OneToMany(targetEntity=UserItem::class, mappedBy="item", orphanRemoval=true)
      */
     private Collection $userItems;
 
     /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="item")
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="item", orphanRemoval=true)
      */
     private Collection $orders;
 
     /**
      * @ORM\Column(type="float")
      */
-    private $price;
+    private float $price;
 
     public function __construct()
     {

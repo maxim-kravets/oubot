@@ -70,6 +70,15 @@ class Bot implements BotInterface
                 case BaseAbstract::COMMAND_COURSES_DOWNLOAD:
                     $this->coursesSection->download();
                     break;
+                case BaseAbstract::COMMAND_COURSES_REMOVE:
+                    $this->coursesSection->removeCourse();
+                    break;
+                case BaseAbstract::COMMAND_COURSES_REMOVE_CONFIRM:
+                    $this->coursesSection->removeCourseConfirm();
+                    break;
+                case BaseAbstract::COMMAND_COURSES_CHANGE_VISIBILITY:
+                    $this->coursesSection->changeVisibility();
+                    break;
                 case BaseAbstract::COMMAND_PROMOCODES:
                     $this->promocodesSection->start();
                     break;
